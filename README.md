@@ -46,3 +46,5 @@ You'll get following compilation error:
 ```text
 error: Method chain must end with the following method: store()
 ```
+
+[![Build Status](https://travis-ci.org/c0stra/fluent-api-end-check.svg?branch=master)](https://travis-ci.org/c0stra/fluent-api-end-check)
