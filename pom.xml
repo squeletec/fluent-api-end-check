@@ -34,7 +34,7 @@
 
     <scm>
         <connection>scm:git:git://github.com/c0stra/fluent-api-end-check.git</connection>
-        <developerConnection>scm:git:ssh://github.com/c0stra/fluent-api-end-check.git</developerConnection>
+        <developerConnection>scm:git:https://github.com/c0stra/fluent-api-end-check.git</developerConnection>
         <url>https://github.com/c0stra/fluent-api-end-check</url>
     </scm>
 
