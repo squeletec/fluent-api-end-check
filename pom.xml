@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <modelVersion>4.0.0</modelVersion>
 
     <name>Fluent API sentence end check.</name>
@@ -36,7 +34,8 @@
         <connection>scm:git:git://github.com/c0stra/fluent-api-end-check.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/c0stra/fluent-api-end-check.git</developerConnection>
         <url>https://github.com/c0stra/fluent-api-end-check</url>
-    </scm>
+      <tag>fluent-api-end-check-1.0</tag>
+  </scm>
 
     <properties>
         <java.version>1.8</java.version>
