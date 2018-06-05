@@ -81,7 +81,7 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	private String message(Collection<Element> m) {
 		return "Method chain must end with " + (m.size() > 1
 				? "one of the following methods: "
-				: "following method: ") + m;
+				: "the method: ") + m;
 	}
 
 	@Override
