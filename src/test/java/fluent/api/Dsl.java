@@ -47,6 +47,12 @@ public interface Dsl {
      * Another terminal method, that needs to be invoked at the end of the chain.
      */
     @End
-    void cancel();
+    Dsl cancel();
+
+    Nested nested();
+
+    void wrongEnd();
+
+    NestedAllowingEnd nestedAllowingEnd();
 
 }

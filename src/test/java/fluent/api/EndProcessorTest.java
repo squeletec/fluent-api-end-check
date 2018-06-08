@@ -36,8 +36,21 @@ public class EndProcessorTest extends CompilerAssert {
     public static Object[][] sourceFilesThatShouldPass() {
         return new Object[][]{
                 {"EndMethodNotMissing"},
+                {"PassThroughEndMethodNotMissing"},
                 {"EndMethodMissingInAssignment"},
                 {"EndMethodCheckIgnored"},
+                {"EndMethodNotMissingInNesting"},
+                {"NestedEndMethodNotMissing"}
+        };
+    }
+
+    @DataProvider
+    public static Object[][] sourceFileThatShouldFail() {
+        return new Object[][]{
+                {"EndMethodMissing"},
+                {"EndMethodMissingInNesting"},
+                {"UnmarkedEndMethod"},
+                {"NestedEndMethodMissing"}
         };
     }
 
@@ -46,9 +59,9 @@ public class EndProcessorTest extends CompilerAssert {
         assertCompilationPass(className + ".java");
     }
 
-    @Test
-    public void compilationShouldFailWhenEndMethodMissing() throws URISyntaxException {
-        assertCompilationFails("EndMethodMissing.java");
+    @Test(dataProvider = "sourceFileThatShouldFail")
+    public void compilationShouldFailWhen(String className) throws URISyntaxException {
+        assertCompilationFails(className + ".java");
     }
 
 }
