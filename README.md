@@ -67,7 +67,7 @@ In order to be able to mark ending method using `@End` annotation, following dep
 <dependency>
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1</version>
 </dependency>
 ```
 The annotation can then be used to mark the ending method:
