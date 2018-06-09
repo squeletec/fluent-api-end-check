@@ -3,7 +3,7 @@
 
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2</version>
     <modelVersion>4.0.0</modelVersion>
 
     <name>Fluent API sentence end check.</name>
@@ -34,7 +34,7 @@
         <connection>scm:git:git://github.com/c0stra/fluent-api-end-check.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/c0stra/fluent-api-end-check.git</developerConnection>
         <url>https://github.com/c0stra/fluent-api-end-check</url>
-      <tag>HEAD</tag>
+      <tag>fluent-api-end-check-1.2</tag>
   </scm>
 
     <properties>
