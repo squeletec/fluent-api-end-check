@@ -31,9 +31,22 @@ import com.sun.source.util.*;
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashSet;
+import java.util.Enumeration;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.sun.source.util.TaskEvent.Kind.ANALYZE;
+import static java.lang.ClassLoader.getSystemResources;
+import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.joining;
+import static javax.lang.model.element.ElementKind.METHOD;
+import static javax.tools.Diagnostic.Kind.WARNING;
 
 /**
  * Pseudo annotation processor of special annotation @End marking terminal methods in fluent API. It actually doesn't do
@@ -43,12 +56,14 @@ import static com.sun.source.util.TaskEvent.Kind.ANALYZE;
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class EndProcessor extends AbstractProcessor {
 
+	private static final String resources = "fluent-api-check-methods.txt";
+
 	@Override
 	public synchronized void init(ProcessingEnvironment env) {
 		super.init(env);
 		JavacTask.instance(env).addTaskListener(new TaskListener() {
-
-			private EndScanner scanner = new EndScanner(Trees.instance(env), env.getTypeUtils());
+			Map<String, Set<String>> initialEndMethodCache = loadEndMethodsFromFiles(new ConcurrentHashMap<>());
+			private EndScanner scanner = new EndScanner(initialEndMethodCache, Trees.instance(env), env.getTypeUtils());
 
 			@Override
 			public void started(TaskEvent taskEvent) {
@@ -67,6 +82,34 @@ public class EndProcessor extends AbstractProcessor {
 	@Override
 	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 		return false;
+	}
+
+	private Map<String, Set<String>> loadEndMethodsFromFiles(Map<String, Set<String>> map) {
+		try {
+			Enumeration<URL> endingMethodResources = getSystemResources(resources);
+			while(endingMethodResources.hasMoreElements()) {
+				URL url = endingMethodResources.nextElement();
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+					reader.lines().forEach(line -> {
+						int i = line.lastIndexOf('.');
+						TypeElement type = processingEnv.getElementUtils().getTypeElement(line.substring(0, i));
+						if(isNull(type)) {
+							processingEnv.getMessager().printMessage(WARNING,
+									"Not recognized ending method " + line + " defined in " + url + ": Class not found.");
+						} else if(type.getEnclosedElements().stream().filter(element -> element.toString().equals(line.substring(i + 1))).peek(
+								method -> map.computeIfAbsent(type.toString(), key -> new HashSet<>()).add(method.toString())
+						).count() == 0) {
+							processingEnv.getMessager().printMessage(WARNING,
+									"Not recognized ending method " + line + " defined in " + url + ": Method not found. Candidates are: "
+											+ type.getEnclosedElements().stream().filter(member -> member.getKind() == METHOD).map(Object::toString).collect(joining(", ")));
+						}
+					});
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return map;
 	}
 
 }

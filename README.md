@@ -67,9 +67,12 @@ In order to be able to mark ending method using `@End` annotation, following dep
 <dependency>
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>1.1</version>
+    <version>${fluent-api-end-check.version}</version>
 </dependency>
 ```
+To figure out, what's the latest available version, use following search link in maven central:
+https://search.maven.org/#search%7Cga%7C1%7Cfluent-api-end-check
+
 The annotation can then be used to mark the ending method:
 ```java
 public interface Config {
@@ -82,16 +85,30 @@ public interface Config {
 ```
 
 #### 1.2 Mark using provided list of ending methods
-!!! NOT YET SUPPORTED !!!
-
 The project may use 3rd party builders / fluent API, which is not under our control, and therefore ending methods
-cannot be annotated. For such case there is a plan to allow providing a simple plain text file containing list of fully qualified methods, which are
-the ending methods to check. It would be simply something like:
+cannot be annotated. For such case there is a plan to allow providing a simple plain text file containing list of fully
+qualified methods, which are the ending methods to check.
+
+The file with the method names, the processor searches for on class path, is:
 ```text
-java.lang.StringBuilder.toString
-foundation.fluent.api.Config.store
+fluent-api-check-methods.txt
 ```
-It should be possible to cumulatively collect all such lists of ending methods across all transitive dependencies.
+It has to list the methods including argument types (without parameter names), same as the javac would represent it.
+
+See example:
+```text
+java.lang.StringBuilder.toString()
+foundation.fluent.api.Config.store()
+```
+It will use all such files found on the class path.
+
+If the processor encounters entry, which it cannot map to real method, it emits a compilation warning.
+In case of class not being available, it says simply, that the class was not found. In case of no method
+found in the class based on the entry in the file, it lists all available methods, including parameters, described
+exactly as it expects the method to be present in the file. So you may see there if:
+1. Your method is present, but there is any issue in format, how it is written (e.g. parameters not included properly)
+2. Your method is not present in the class. In that case you may included method, which is inherited, and you need to
+ update the entry with class / interface, where the method is declared.
 #### 1.3 Mark multiple ending methods
 It is possible to mark multiple methods of one interface / class as ending methods. That effectively means, that it has
 to end with one of them.
@@ -163,7 +180,7 @@ It can be done e.g. using maven compiler plugin:
                     <annotationProcessorPath>
                         <groupId>foundation.fluent.api</groupId>
                         <artifactId>fluent-api-end-check</artifactId>
-                        <version>1.0-SNAPSHOT</version>
+                        <version>${fluent-api-end-check.version}</version>
                     </annotationProcessorPath>
                 </annotationProcessorPaths>
             </configuration>
@@ -206,3 +223,17 @@ public class TestFluentApi {
 }
 ```
 Without ignoring the end method check, this test method would throw compilation error.
+
+## Release notes
+#### Version 1.2 (Released on June 9th 2018)
+- Added support to load external definition of ending methods (https://github.com/c0stra/fluent-api-end-check/issues/1)
+
+#### Version 1.1 (Released on June 8th 2018)
+- Improved analysis of the fluent sentence.
+- It can detect ending method for interfaces / classes even if the sentence uses nesting.
+- It can detect ending method also in case of the "pass through" ending method (method allowing chaining because it can 
+ be used multiple times within the chain) (https://github.com/c0stra/fluent-api-end-check/issues/2).
+ 
+ #### Version 1.0 (Released on June 5th 2018)
+ - Initial naive implementation using simple check of the expression statement return type.
+ 

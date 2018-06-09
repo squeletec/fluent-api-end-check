@@ -40,7 +40,8 @@ public class EndProcessorTest extends CompilerAssert {
                 {"EndMethodMissingInAssignment"},
                 {"EndMethodCheckIgnored"},
                 {"EndMethodNotMissingInNesting"},
-                {"NestedEndMethodNotMissing"}
+                {"NestedEndMethodNotMissing"},
+                {"ExternalEndMethodNotMissing"}
         };
     }
 
@@ -50,7 +51,8 @@ public class EndProcessorTest extends CompilerAssert {
                 {"EndMethodMissing"},
                 {"EndMethodMissingInNesting"},
                 {"UnmarkedEndMethod"},
-                {"NestedEndMethodMissing"}
+                {"NestedEndMethodMissing"},
+                {"ExternalEndMethodMissing"}
         };
     }
 

@@ -36,7 +36,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.sun.source.tree.Tree.Kind.ASSIGNMENT;
 import static java.lang.Boolean.FALSE;
@@ -53,34 +52,36 @@ import static javax.tools.Diagnostic.Kind.ERROR;
  */
 class EndScanner extends TreePathScanner<Void, Void> {
 
-	private final Map<Element, Set<Element>> endMethodsCache = new ConcurrentHashMap<>();
+	private final Map<String, Set<String>> endMethodsCache;
 	private final Trees trees;
 	private final Types types;
 	private final StartScanner startScanner = new StartScanner();
 
-	EndScanner(Trees trees, Types types) {
+	EndScanner(Map<String, Set<String>> endMethodsCache, Trees trees, Types types) {
+		this.endMethodsCache = endMethodsCache;
 		this.trees = trees;
 		this.types = types;
 	}
 
-	private Set<Element> getMethods(Tree tree) {
+	private Set<String> getMethods(Tree tree) {
 		return getMethods(trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree)));
 	}
 
-	private Set<Element> getMethods(TypeMirror typeMirror) {
+	private Set<String> getMethods(TypeMirror typeMirror) {
 		Element element = types.asElement(typeMirror);
 		if(isNull(element)) {
 			return emptySet();
 		} else {
-			if(!endMethodsCache.containsKey(element)) {
-				Set<Element> methods = getMethods(element);
-				endMethodsCache.put(element, methods);
+			String elementName = element.toString();
+			if(!endMethodsCache.containsKey(elementName)) {
+				Set<String> methods = getMethods(element);
+				endMethodsCache.put(elementName, methods);
 			}
-			return endMethodsCache.get(element);
+			return endMethodsCache.get(elementName);
 		}
 	}
 
-	private String message(Collection<Element> m) {
+	private String message(Collection<String> m) {
 		return "Method chain must end with " + (m.size() > 1
 				? "one of the following methods: "
 				: "the method: ") + m;
@@ -92,7 +93,7 @@ class EndScanner extends TreePathScanner<Void, Void> {
 		if (expression.getKind() != ASSIGNMENT) {
 			Element element = element(expression);
 			if(nonNull(element) && element.getKind() != CONSTRUCTOR) {
-				Set<Element> methods = new HashSet<>();
+				Set<String> methods = new HashSet<>();
 				if(FALSE.equals(expression.accept(startScanner, methods))) {
 					trees.printMessage(ERROR, message(methods), statement, getCurrentPath().getCompilationUnit());
 				}
@@ -114,10 +115,11 @@ class EndScanner extends TreePathScanner<Void, Void> {
 		return ignoreCheck(methodTree) ? aVoid : super.visitMethod(methodTree, aVoid);
 	}
 
-	private Set<Element> getMethods(Element element) {
-		Set<Element> methods = element.getEnclosedElements().stream().filter(this::isEndMethod).collect(toSet());
+	private Set<String> getMethods(Element element) {
+		Set<String> methods = element.getEnclosedElements().stream().filter(this::isEndMethod).map(Object::toString).collect(toSet());
 		types.directSupertypes(element.asType()).forEach(type -> methods.addAll(getMethods(type)));
-		return methods;
+		// Let's save some memory on set instances. All classes without any ending methods share one instance.
+		return methods.isEmpty() ? emptySet() : methods;
 	}
 
 	private boolean isEndMethod(Element element) {
@@ -127,21 +129,22 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	/**
 	 * This scanner is
 	 */
-	private class StartScanner extends TreeScanner<Boolean, Set<Element>> {
+	private class StartScanner extends TreeScanner<Boolean, Set<String>> {
 
 		@Override
-		public Boolean visitExpressionStatement(ExpressionStatementTree tree, Set<Element> methods) {
+		public Boolean visitExpressionStatement(ExpressionStatementTree tree, Set<String> methods) {
 			return tree.getExpression().accept(this, methods);
 		}
 
 		@Override
-		public Boolean visitMethodInvocation(MethodInvocationTree tree, Set<Element> methods) {
+		public Boolean visitMethodInvocation(MethodInvocationTree tree, Set<String> methods) {
 			super.visitMethodInvocation(tree, methods);
-			return methods.isEmpty() || isEndMethod(element(tree));
+			Element method = element(tree);
+			return methods.isEmpty() || isEndMethod(method) || endMethodsCache.get(method.getEnclosingElement().toString()).contains(method.toString());
 		}
 
 		@Override
-		public Boolean visitMemberSelect(MemberSelectTree tree, Set<Element> methods) {
+		public Boolean visitMemberSelect(MemberSelectTree tree, Set<String> methods) {
 			tree.getExpression().accept(this, methods);
 			methods.addAll(getMethods(tree.getExpression()));
 			return methods.isEmpty();
