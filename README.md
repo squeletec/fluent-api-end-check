@@ -99,7 +99,13 @@ See example:
 ```text
 java.lang.StringBuilder.toString()
 foundation.fluent.api.Config.store()
+fluent.api.GenericDsl.end(T)
+fluent.api.GenericDsl.<U>genericEnd(U)
 ```
+Last 2 examples are:
+- Generic class with a method accepting argument of the generic parameter of the class
+- Generic method (see the generic argument in the signature) accepting argument of the method generic parameter type.
+
 It will use all such files found on the class path.
 
 If the processor encounters entry, which it cannot map to real method, it emits a compilation warning.
@@ -197,11 +203,12 @@ errors mentioned above.
 It's not desired always to perform the check. So let's have a look at the situations, when it
 would apply.
 
-| Situation             | Example                      | Applies or not          |
-| --------------------- | ---------------------------- | ----------------------- |
-| Expression statement  | config.set("", "");          | __YES__                 |
-| Assignment            | config = config.set("", ""); | __NO__ - may end later  |
-| Passed as argument    | method(config.set("", ""));  | __NO__ - may end inside |
+| Situation             | Example                      | Applies or not           |
+| --------------------- | ---------------------------- | ------------------------ |
+| Expression statement  | config.set("", "");          | __YES__                  |
+| Assignment            | config = config.set("", ""); | __NO__ - may end later   |
+| Passed as argument    | method(config.set("", ""));  | __NO__ - may end inside  |
+| Return statement      | return config.set("", "");   | __NO__ - may end outside |
 
 ### 3.1 How to bypass the check explicitly using `@IgnoreMissingEndMethod`
 Although the check itself tries to recognize situations, when it shouldn't apply the check, there might
@@ -225,14 +232,20 @@ public class TestFluentApi {
 Without ignoring the end method check, this test method would throw compilation error.
 
 ## Release notes
+
+#### Version 1.3 (Released on June 10th 2018)
+- [#3: Fixed issue with "immediate" ending method requirement](https://github.com/c0stra/fluent-api-end-check/issues/3)
+- [#4: Added test cases to verify proper behavior for generic classes and generic ending methods](https://github.com/c0stra/fluent-api-end-check/issues/4)
+- Improved implementation, so it doesn't drill down the sentence if a chain ends with the ending method.
+
 #### Version 1.2 (Released on June 9th 2018)
-- Added support to load external definition of ending methods (https://github.com/c0stra/fluent-api-end-check/issues/1)
+- [#1: Added support to load external definition of ending methods](https://github.com/c0stra/fluent-api-end-check/issues/1)
 
 #### Version 1.1 (Released on June 8th 2018)
 - Improved analysis of the fluent sentence.
 - It can detect ending method for interfaces / classes even if the sentence uses nesting.
-- It can detect ending method also in case of the "pass through" ending method (method allowing chaining because it can 
- be used multiple times within the chain) (https://github.com/c0stra/fluent-api-end-check/issues/2).
+- [#2: It can detect ending method also in case of the "pass through" ending method (method allowing chaining because it can](https://github.com/c0stra/fluent-api-end-check/issues/2)
+ be used multiple times within the chain).
  
  #### Version 1.0 (Released on June 5th 2018)
  - Initial naive implementation using simple check of the expression statement return type.

@@ -1,1 +1,4 @@
 java.lang.StringBuilder.toString()
+fluent.api.GenericDsl.end()
+fluent.api.GenericDsl.end(T)
+fluent.api.GenericDsl.<U>genericEnd(U)

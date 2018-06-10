@@ -41,18 +41,23 @@ public class EndProcessorTest extends CompilerAssert {
                 {"EndMethodCheckIgnored"},
                 {"EndMethodNotMissingInNesting"},
                 {"NestedEndMethodNotMissing"},
-                {"ExternalEndMethodNotMissing"}
+                {"ExternalEndMethodNotMissing"},
+                {"ExternalGenericEndMethodNotMissing"},
+                {"ExternalGenericEndMethodWithParameterNotMissing"},
+                {"ExternalGenericEndMethodWithGenericParameterNotMissing"}
         };
     }
 
     @DataProvider
     public static Object[][] sourceFileThatShouldFail() {
         return new Object[][]{
+                {"ImmediateEndMethodMissing"},
                 {"EndMethodMissing"},
                 {"EndMethodMissingInNesting"},
                 {"UnmarkedEndMethod"},
                 {"NestedEndMethodMissing"},
-                {"ExternalEndMethodMissing"}
+                {"ExternalEndMethodMissing"},
+                {"ExternalGenericEndMethodMissing"}
         };
     }
 

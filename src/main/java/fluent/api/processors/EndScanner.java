@@ -93,7 +93,7 @@ class EndScanner extends TreePathScanner<Void, Void> {
 		if (expression.getKind() != ASSIGNMENT) {
 			Element element = element(expression);
 			if(nonNull(element) && element.getKind() != CONSTRUCTOR) {
-				Set<String> methods = new HashSet<>();
+				Set<String> methods = new HashSet<>(getMethods(expression));
 				if(FALSE.equals(expression.accept(startScanner, methods))) {
 					trees.printMessage(ERROR, message(methods), statement, getCurrentPath().getCompilationUnit());
 				}
@@ -132,15 +132,13 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	private class StartScanner extends TreeScanner<Boolean, Set<String>> {
 
 		@Override
-		public Boolean visitExpressionStatement(ExpressionStatementTree tree, Set<String> methods) {
-			return tree.getExpression().accept(this, methods);
-		}
-
-		@Override
 		public Boolean visitMethodInvocation(MethodInvocationTree tree, Set<String> methods) {
-			super.visitMethodInvocation(tree, methods);
 			Element method = element(tree);
-			return methods.isEmpty() || isEndMethod(method) || endMethodsCache.get(method.getEnclosingElement().toString()).contains(method.toString());
+			if(isEndMethod(method) || endMethodsCache.getOrDefault(method.getEnclosingElement().toString(), emptySet()).contains(method.toString())) {
+				return true;
+			}
+			super.visitMethodInvocation(tree, methods);
+			return methods.isEmpty();
 		}
 
 		@Override
