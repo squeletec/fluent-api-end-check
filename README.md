@@ -211,7 +211,7 @@ would apply.
 | Return statement      | return config.set("", "");   | __NO__ - may end outside |
 
 
-### 3.3 How to bypass the check using `@IgnoreMissingEndMethod`
+### 3.2 How to bypass the check using `@IgnoreMissingEndMethod`
 Although the check itself tries to recognize situations, when it shouldn't apply the check, there might
 be situations, when it would apply it, but it's still not desired. For such cases an annotation
 `@IgnoreMissingEndMethod` can be used on a method, to bypass it's statements for such check.
