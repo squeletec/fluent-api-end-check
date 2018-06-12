@@ -30,6 +30,7 @@ import com.sun.source.util.*;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -40,6 +41,7 @@ import java.util.Map;
 import java.util.HashSet;
 import java.util.Enumeration;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import static com.sun.source.util.TaskEvent.Kind.ANALYZE;
 import static java.lang.ClassLoader.getSystemResources;
@@ -62,19 +64,13 @@ public class EndProcessor extends AbstractProcessor {
 	public synchronized void init(ProcessingEnvironment env) {
 		super.init(env);
 		JavacTask.instance(env).addTaskListener(new TaskListener() {
-			Map<String, Set<String>> initialEndMethodCache = loadEndMethodsFromFiles(new ConcurrentHashMap<>());
-			private EndScanner scanner = new EndScanner(initialEndMethodCache, Trees.instance(env), env.getTypeUtils());
+			private EndScanner scanner = new EndScanner(loadEndMethodsFromFiles(), Trees.instance(env), env.getTypeUtils());
 
-			@Override
-			public void started(TaskEvent taskEvent) {
-				// Nothing to do when task started.
+			@Override public void started(TaskEvent taskEvent) {
 			}
 
-			@Override
-			public void finished(TaskEvent taskEvent) {
-				if(taskEvent.getKind() == ANALYZE) {
-					scanner.scan(taskEvent.getCompilationUnit(), null);
-				}
+			@Override public void finished(TaskEvent taskEvent) {
+				if(taskEvent.getKind() == ANALYZE) scanner.scan(taskEvent.getCompilationUnit(), null);
 			}
 		});
 	}
@@ -84,32 +80,40 @@ public class EndProcessor extends AbstractProcessor {
 		return false;
 	}
 
-	private Map<String, Set<String>> loadEndMethodsFromFiles(Map<String, Set<String>> map) {
+	private Map<String, Set<String>> loadEndMethodsFromFiles() {
+		Map<String, Set<String>> map = new ConcurrentHashMap<>();
 		try {
 			Enumeration<URL> endingMethodResources = getSystemResources(resources);
 			while(endingMethodResources.hasMoreElements()) {
 				URL url = endingMethodResources.nextElement();
 				try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
-					reader.lines().forEach(line -> {
-						int i = line.lastIndexOf('.');
-						TypeElement type = processingEnv.getElementUtils().getTypeElement(line.substring(0, i));
-						if(isNull(type)) {
-							processingEnv.getMessager().printMessage(WARNING,
-									"Not recognized ending method " + line + " defined in " + url + ": Class not found.");
-						} else if(type.getEnclosedElements().stream().filter(element -> element.toString().equals(line.substring(i + 1))).peek(
-								method -> map.computeIfAbsent(type.toString(), key -> new HashSet<>()).add(method.toString())
-						).count() == 0) {
-							processingEnv.getMessager().printMessage(WARNING,
-									"Not recognized ending method " + line + " defined in " + url + ": Method not found. Candidates are: "
-											+ type.getEnclosedElements().stream().filter(member -> member.getKind() == METHOD).map(Object::toString).collect(joining(", ")));
-						}
-					});
+					reader.lines().forEach(line -> addExternalEndingMethod(line, map, url));
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return map;
+	}
+
+	private void addExternalEndingMethod(String line, Map<String, Set<String>> map, URL url) {
+		int i = line.lastIndexOf('.');
+		TypeElement type = processingEnv.getElementUtils().getTypeElement(line.substring(0, i));
+		if(isNull(type)) {
+			warning(line, url, "Class not found");
+		} else if(methodsOf(type).filter(method -> method.equals(line.substring(i + 1))).peek(
+				method -> map.computeIfAbsent(type.toString(), key -> new HashSet<>()).add(method)
+		).count() == 0) {
+			warning(line, url, "Method not found. Candidates are: " + methodsOf(type).collect(joining(", ")));
+		}
+	}
+
+	private void warning(String line, URL url, String reason) {
+		processingEnv.getMessager().printMessage(WARNING, "Not recognized ending method " + line + " defined in " + url + ": " + reason + "!");
+	}
+
+	private Stream<? extends String> methodsOf(Element type) {
+		return type.getEnclosedElements().stream().filter(member -> member.getKind() == METHOD).map(Object::toString);
 	}
 
 }

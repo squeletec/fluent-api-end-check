@@ -25,52 +25,63 @@
 
 package fluent.api;
 
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import javax.tools.*;
+import java.io.File;
+import java.io.StringWriter;
 import java.net.URISyntaxException;
+import java.util.List;
 
-public class EndProcessorTest extends CompilerAssert {
+import static fluent.api.EndProcessorTest.Expectation.failWhen;
+import static fluent.api.EndProcessorTest.Expectation.passWhen;
+import static java.util.Collections.emptyList;
+
+public class EndProcessorTest {
+
+    enum Expectation {passWhen, failWhen}
 
     @DataProvider
-    public static Object[][] sourceFilesThatShouldPass() {
+    public static Object[][] sourceFiles() {
         return new Object[][]{
-                {"EndMethodNotMissing"},
-                {"PassThroughEndMethodNotMissing"},
-                {"EndMethodMissingInAssignment"},
-                {"EndMethodCheckIgnored"},
-                {"EndMethodNotMissingInNesting"},
-                {"NestedEndMethodNotMissing"},
-                {"ExternalEndMethodNotMissing"},
-                {"ExternalGenericEndMethodNotMissing"},
-                {"ExternalGenericEndMethodWithParameterNotMissing"},
-                {"ExternalGenericEndMethodWithGenericParameterNotMissing"}
+                {passWhen, "EndMethodNotMissing"},
+                {passWhen, "PassThroughEndMethodNotMissing"},
+                {passWhen, "EndMethodMissingInAssignment"},
+                {passWhen, "EndMethodCheckIgnored"},
+                {passWhen, "EndMethodNotMissingInNesting"},
+                {passWhen, "NestedEndMethodNotMissing"},
+                {passWhen, "ExternalEndMethodNotMissing"},
+                {passWhen, "ExternalGenericEndMethodNotMissing"},
+                {passWhen, "ExternalGenericEndMethodWithParameterNotMissing"},
+                {passWhen, "ExternalGenericEndMethodWithGenericParameterNotMissing"},
+
+                {failWhen, "ImmediateEndMethodMissing"},
+                {failWhen, "ImmediateEndMethodMissingAfterConstructor"},
+                {failWhen, "EndMethodMissing"},
+                {failWhen, "EndMethodMissingInNesting"},
+                {failWhen, "UnmarkedEndMethod"},
+                {failWhen, "NestedEndMethodMissing"},
+                {failWhen, "ExternalEndMethodMissing"},
+                {failWhen, "ExternalGenericEndMethodMissing"},
+                {failWhen, "ImmediateEndMethodMissingAfterAnonymousClass"}
         };
     }
 
-    @DataProvider
-    public static Object[][] sourceFileThatShouldFail() {
-        return new Object[][]{
-                {"ImmediateEndMethodMissing"},
-                {"ImmediateEndMethodMissingAfterConstructor"},
-                {"EndMethodMissing"},
-                {"EndMethodMissingInNesting"},
-                {"UnmarkedEndMethod"},
-                {"NestedEndMethodMissing"},
-                {"ExternalEndMethodMissing"},
-                {"ExternalGenericEndMethodMissing"},
-                {"ImmediateEndMethodMissingAfterAnonymousClass"}
-        };
-    }
-
-    @Test(dataProvider = "sourceFilesThatShouldPass")
-    public void compilationShouldPassWhen(String className) throws URISyntaxException {
-        assertCompilationPass(className + ".java");
-    }
-
-    @Test(dataProvider = "sourceFileThatShouldFail")
-    public void compilationShouldFailWhen(String className) throws URISyntaxException {
-        assertCompilationFails(className + ".java");
+    @Test(dataProvider = "sourceFiles")
+    public void compilationShould(Expectation expected, String className) throws URISyntaxException {
+        DiagnosticCollector<JavaFileObject> listener = new DiagnosticCollector<>();
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+        Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjects(new File(getClass().getResource(className + ".java").toURI()));
+        JavaCompiler.CompilationTask task = compiler.getTask(new StringWriter(), fileManager, listener, emptyList(), null, fileObjects);
+        boolean result = task.call();
+        List<Diagnostic<? extends JavaFileObject>> diagnostics = listener.getDiagnostics();
+        if (!diagnostics.isEmpty()) {
+            System.out.println(diagnostics);
+        }
+        Assert.assertEquals(result, expected == passWhen, diagnostics.toString());
     }
 
 }
