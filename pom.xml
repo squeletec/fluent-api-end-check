@@ -43,7 +43,6 @@
         <testng.version>6.14.3</testng.version>
         <mockito.version>2.18.3</mockito.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <ossrh.release>true</ossrh.release>
     </properties>
 
     <dependencies>
@@ -148,19 +147,11 @@
                 <configuration>
                     <serverId>ossrh</serverId>
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>${ossrh.release}</autoReleaseAfterClose>
+                    <keepStagingRepositoryOnCloseRuleFailure>true</keepStagingRepositoryOnCloseRuleFailure>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>no-auto-release</id>
-            <properties>
-                <ossrh.release>false</ossrh.release>
-            </properties>
-        </profile>
-    </profiles>
 
 </project>
