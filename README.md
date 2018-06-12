@@ -67,7 +67,7 @@ In order to be able to mark ending method using `@End` annotation, following dep
 <dependency>
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>1.4</version>
+    <version>1.5</version>
 </dependency>
 ```
 To figure out, what's the latest available version, use following search link in maven central:
@@ -186,7 +186,7 @@ It can be done e.g. using maven compiler plugin:
                     <annotationProcessorPath>
                         <groupId>foundation.fluent.api</groupId>
                         <artifactId>fluent-api-end-check</artifactId>
-                        <version>1.4</version>
+                        <version>1.5</version>
                     </annotationProcessorPath>
                 </annotationProcessorPaths>
             </configuration>
@@ -233,6 +233,9 @@ public class TestFluentApi {
 Without ignoring the end method check, this test method would throw compilation error.
 
 ## Release notes
+
+#### Version 1.5 (June 12th 2018)
+- Some tweaks to the release process in the pom.xml
 
 #### Version 1.4 (June 12th 2018)
 - Fixed [#5: BUG: Check doesn't recognize missing ending method after constructor](https://github.com/c0stra/fluent-api-end-check/issues/5)
