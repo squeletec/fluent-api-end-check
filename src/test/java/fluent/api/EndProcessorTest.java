@@ -52,12 +52,14 @@ public class EndProcessorTest extends CompilerAssert {
     public static Object[][] sourceFileThatShouldFail() {
         return new Object[][]{
                 {"ImmediateEndMethodMissing"},
+                {"ImmediateEndMethodMissingAfterConstructor"},
                 {"EndMethodMissing"},
                 {"EndMethodMissingInNesting"},
                 {"UnmarkedEndMethod"},
                 {"NestedEndMethodMissing"},
                 {"ExternalEndMethodMissing"},
-                {"ExternalGenericEndMethodMissing"}
+                {"ExternalGenericEndMethodMissing"},
+                {"ImmediateEndMethodMissingAfterAnonymousClass"}
         };
     }
 

@@ -38,7 +38,7 @@ import javax.lang.model.util.Types;
 import java.util.*;
 
 import static com.sun.source.tree.Tree.Kind.ASSIGNMENT;
-import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -92,9 +92,10 @@ class EndScanner extends TreePathScanner<Void, Void> {
 		ExpressionTree expression = statement.getExpression();
 		if (expression.getKind() != ASSIGNMENT) {
 			Element element = element(expression);
-			if(nonNull(element) && element.getKind() != CONSTRUCTOR) {
+			if(nonNull(element)) {
 				Set<String> methods = new HashSet<>(getMethods(expression));
-				if(FALSE.equals(expression.accept(startScanner, methods))) {
+				Boolean hasEnd = expression.accept(startScanner, methods);
+				if(!(TRUE.equals(hasEnd) || methods.isEmpty())) {
 					trees.printMessage(ERROR, message(methods), statement, getCurrentPath().getCompilationUnit());
 				}
 			}
@@ -116,34 +117,57 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	}
 
 	private Set<String> getMethods(Element element) {
-		Set<String> methods = element.getEnclosedElements().stream().filter(this::isEndMethod).map(Object::toString).collect(toSet());
+		Set<String> methods = element.getEnclosedElements().stream().filter(EndScanner::isAnnotatedEndMethod)
+				.map(Object::toString).collect(toSet());
 		types.directSupertypes(element.asType()).forEach(type -> methods.addAll(getMethods(type)));
 		// Let's save some memory on set instances. All classes without any ending methods share one instance.
 		return methods.isEmpty() ? emptySet() : methods;
 	}
 
-	private boolean isEndMethod(Element element) {
-		return nonNull(element.getAnnotation(End.class));
+	private static boolean isAnnotatedEndMethod(Element method) {
+		return nonNull(method.getAnnotation(End.class));
+	}
+
+	private static boolean isConstructor(Element method) {
+		return method.getKind() == CONSTRUCTOR;
+	}
+
+	private boolean isExternalEndMethod(Element method) {
+		return endMethodsCache.getOrDefault(method.getEnclosingElement().toString(), emptySet()).contains(method.toString());
 	}
 
 	/**
-	 * This scanner is
+	 * This scanner is drilling down the chain of method calls (fluent API sentence), to identify all points in the chain,
+	 * that may require some ending method.
 	 */
 	private class StartScanner extends TreeScanner<Boolean, Set<String>> {
 
 		@Override
 		public Boolean visitMethodInvocation(MethodInvocationTree tree, Set<String> methods) {
 			Element method = element(tree);
-			if(isEndMethod(method) || endMethodsCache.getOrDefault(method.getEnclosingElement().toString(), emptySet()).contains(method.toString())) {
+			/*
+			 * 1. If the method element represents constructor, which is invoked as method (method invocation), then it
+			 *    refers to call of super() or this(), which needs to be excluded from the check. Standard usage of
+			 *    constructor within "new Object();" is represented by "new class" and not "method invocation".
+			 *
+			 * 2. If method is annotated with @End annotation, it fulfills the requirement for sentence ending.
+			 *
+			 * 3. If method is found in cache (and still not annotated with @End), that means, that it was marked in
+			 *    external source as ending method, so it fulfills the requirement for sentence ending.
+			 */
+			if(isConstructor(method) || isAnnotatedEndMethod(method) || isExternalEndMethod(method)) {
 				return true;
 			}
+			// Only drill down if we didn't encounter an ending method.
 			super.visitMethodInvocation(tree, methods);
 			return methods.isEmpty();
 		}
 
 		@Override
 		public Boolean visitMemberSelect(MemberSelectTree tree, Set<String> methods) {
+			// First drill down further.
 			tree.getExpression().accept(this, methods);
+			// Now get required methods for the type, to which the expression evaluates, on which we select the method.
 			methods.addAll(getMethods(tree.getExpression()));
 			return methods.isEmpty();
 		}

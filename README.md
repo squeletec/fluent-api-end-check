@@ -67,7 +67,7 @@ In order to be able to mark ending method using `@End` annotation, following dep
 <dependency>
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>${fluent-api-end-check.version}</version>
+    <version>1.4</version>
 </dependency>
 ```
 To figure out, what's the latest available version, use following search link in maven central:
@@ -186,7 +186,7 @@ It can be done e.g. using maven compiler plugin:
                     <annotationProcessorPath>
                         <groupId>foundation.fluent.api</groupId>
                         <artifactId>fluent-api-end-check</artifactId>
-                        <version>${fluent-api-end-check.version}</version>
+                        <version>1.4</version>
                     </annotationProcessorPath>
                 </annotationProcessorPaths>
             </configuration>
@@ -210,7 +210,8 @@ would apply.
 | Passed as argument    | method(config.set("", ""));  | __NO__ - may end inside  |
 | Return statement      | return config.set("", "");   | __NO__ - may end outside |
 
-### 3.1 How to bypass the check explicitly using `@IgnoreMissingEndMethod`
+
+### 3.3 How to bypass the check using `@IgnoreMissingEndMethod`
 Although the check itself tries to recognize situations, when it shouldn't apply the check, there might
 be situations, when it would apply it, but it's still not desired. For such cases an annotation
 `@IgnoreMissingEndMethod` can be used on a method, to bypass it's statements for such check.
@@ -233,20 +234,23 @@ Without ignoring the end method check, this test method would throw compilation 
 
 ## Release notes
 
-#### Version 1.3 (Released on June 10th 2018)
-- [#3: Fixed issue with "immediate" ending method requirement](https://github.com/c0stra/fluent-api-end-check/issues/3)
+#### Version 1.4 (June 12th 2018)
+- Fixed [#5: BUG: Check doesn't recognize missing ending method after constructor](https://github.com/c0stra/fluent-api-end-check/issues/5)
+
+#### Version 1.3 (June 10th 2018)
+- Fixed [#3: Issue with "immediate" ending method requirement](https://github.com/c0stra/fluent-api-end-check/issues/3)
 - [#4: Added test cases to verify proper behavior for generic classes and generic ending methods](https://github.com/c0stra/fluent-api-end-check/issues/4)
 - Improved implementation, so it doesn't drill down the sentence if a chain ends with the ending method.
 
-#### Version 1.2 (Released on June 9th 2018)
+#### Version 1.2 (June 9th 2018)
 - [#1: Added support to load external definition of ending methods](https://github.com/c0stra/fluent-api-end-check/issues/1)
 
-#### Version 1.1 (Released on June 8th 2018)
+#### Version 1.1 (June 8th 2018)
 - Improved analysis of the fluent sentence.
 - It can detect ending method for interfaces / classes even if the sentence uses nesting.
 - [#2: It can detect ending method also in case of the "pass through" ending method (method allowing chaining because it can](https://github.com/c0stra/fluent-api-end-check/issues/2)
  be used multiple times within the chain).
  
- #### Version 1.0 (Released on June 5th 2018)
+ #### Version 1.0 (June 5th 2018)
  - Initial naive implementation using simple check of the expression statement return type.
  
