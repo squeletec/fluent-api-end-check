@@ -237,24 +237,24 @@ Without ignoring the end method check, this test method would throw compilation 
 #### Version 1.5 (June 12th 2018)
 - Some tweaks to the release process in the pom.xml
 
-[Test evidence for 1.5](test-evidence/1.5/index.html)
+[Test evidence for 1.5](TEST-REPORT-1.5.md)
 
 #### Version 1.4 (June 12th 2018)
 - Fixed [#5: BUG: Check doesn't recognize missing ending method after constructor](https://github.com/c0stra/fluent-api-end-check/issues/5)
 
-[Test evidence for 1.4](test-evidence/1.4/index.html)
+[Test evidence for 1.4](TEST-REPORT-1.4.md)
 
 #### Version 1.3 (June 10th 2018)
 - Fixed [#3: Issue with "immediate" ending method requirement](https://github.com/c0stra/fluent-api-end-check/issues/3)
 - [#4: Added test cases to verify proper behavior for generic classes and generic ending methods](https://github.com/c0stra/fluent-api-end-check/issues/4)
 - Improved implementation, so it doesn't drill down the sentence if a chain ends with the ending method.
 
-[Test evidence for 1.3](test-evidence/1.3/index.html)
+[Test evidence for 1.3](TEST-REPORT-1.3.md)
 
 #### Version 1.2 (June 9th 2018)
 - [#1: Added support to load external definition of ending methods](https://github.com/c0stra/fluent-api-end-check/issues/1)
 
-[Test evidence for 1.2](test-evidence/1.2/index.html)
+[Test evidence for 1.2](TEST-REPORT-1.2.md)
 
 #### Version 1.1 (June 8th 2018)
 - Improved analysis of the fluent sentence.
@@ -262,9 +262,9 @@ Without ignoring the end method check, this test method would throw compilation 
 - [#2: It can detect ending method also in case of the "pass through" ending method (method allowing chaining because it can](https://github.com/c0stra/fluent-api-end-check/issues/2)
  be used multiple times within the chain).
  
-[Test evidence for 1.1](test-evidence/1.1/index.html)
+[Test evidence for 1.1](TEST-REPORT-1.1.md)
 
  #### Version 1.0 (June 5th 2018)
  - Initial naive implementation using simple check of the expression statement return type.
  
-[Test evidence for 1.0](test-evidence/1.0/index.html)
+[Test evidence for 1.0](TEST-REPORT-1.0.md)
