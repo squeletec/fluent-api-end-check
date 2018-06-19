@@ -31,6 +31,7 @@ package fluent.api;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 import javax.tools.*;
@@ -43,6 +44,7 @@ import static fluent.api.EndProcessorTest.Expectation.FAIL;
 import static fluent.api.EndProcessorTest.Expectation.PASS;
 import static java.util.Collections.emptyList;
 
+@Listeners(MarkdownReporter.class)
 public class EndProcessorTest {
 
     enum Expectation {PASS, FAIL;
@@ -73,7 +75,7 @@ public class EndProcessorTest {
                 {FAIL, "NestedEndMethodMissing"},
                 {FAIL, "ExternalEndMethodMissing"},
                 {FAIL, "ExternalGenericEndMethodMissing"},
-                {FAIL, "ImmediateEndMethodMissingAfterAnonymousClass"}
+                {PASS, "ImmediateEndMethodMissingAfterAnonymousClass"}
         };
     }
 
