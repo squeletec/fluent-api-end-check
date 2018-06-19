@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testng-results skipped="0" failed="0" ignored="0" total="12" passed="12">
+  <reporter-output>
+  </reporter-output>
+  <suite name="fluent.api.EndProcessorTest" duration-ms="1263" started-at="2018-06-19T13:27:19Z" finished-at="2018-06-19T13:27:21Z">
+    <groups>
+    </groups>
+    <test name="Command line test" duration-ms="1263" started-at="2018-06-19T13:27:19Z" finished-at="2018-06-19T13:27:21Z">
+      <class name="fluent.api.EndProcessorTest">
+        <test-method status="PASS" signature="compilationShouldFailWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldFailWhen" duration-ms="620" started-at="2018-06-19T13:27:19Z" data-provider="sourceFileThatShouldFail" finished-at="2018-06-19T13:27:20Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[EndMethodMissing]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldFailWhen -->
+        <test-method status="PASS" signature="compilationShouldFailWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldFailWhen" duration-ms="40" started-at="2018-06-19T13:27:20Z" data-provider="sourceFileThatShouldFail" finished-at="2018-06-19T13:27:20Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[EndMethodMissingInNesting]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldFailWhen -->
+        <test-method status="PASS" signature="compilationShouldFailWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldFailWhen" duration-ms="44" started-at="2018-06-19T13:27:20Z" data-provider="sourceFileThatShouldFail" finished-at="2018-06-19T13:27:20Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[UnmarkedEndMethod]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldFailWhen -->
+        <test-method status="PASS" signature="compilationShouldFailWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldFailWhen" duration-ms="39" started-at="2018-06-19T13:27:20Z" data-provider="sourceFileThatShouldFail" finished-at="2018-06-19T13:27:20Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[NestedEndMethodMissing]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldFailWhen -->
+        <test-method status="PASS" signature="compilationShouldFailWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldFailWhen" duration-ms="84" started-at="2018-06-19T13:27:20Z" data-provider="sourceFileThatShouldFail" finished-at="2018-06-19T13:27:20Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[ExternalEndMethodMissing]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldFailWhen -->
+        <test-method status="PASS" signature="compilationShouldPassWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldPassWhen" duration-ms="81" started-at="2018-06-19T13:27:20Z" data-provider="sourceFilesThatShouldPass" finished-at="2018-06-19T13:27:20Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[EndMethodNotMissing]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldPassWhen -->
+        <test-method status="PASS" signature="compilationShouldPassWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldPassWhen" duration-ms="41" started-at="2018-06-19T13:27:20Z" data-provider="sourceFilesThatShouldPass" finished-at="2018-06-19T13:27:20Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[PassThroughEndMethodNotMissing]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldPassWhen -->
+        <test-method status="PASS" signature="compilationShouldPassWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldPassWhen" duration-ms="34" started-at="2018-06-19T13:27:20Z" data-provider="sourceFilesThatShouldPass" finished-at="2018-06-19T13:27:20Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[EndMethodMissingInAssignment]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldPassWhen -->
+        <test-method status="PASS" signature="compilationShouldPassWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldPassWhen" duration-ms="66" started-at="2018-06-19T13:27:20Z" data-provider="sourceFilesThatShouldPass" finished-at="2018-06-19T13:27:21Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[EndMethodCheckIgnored]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldPassWhen -->
+        <test-method status="PASS" signature="compilationShouldPassWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldPassWhen" duration-ms="52" started-at="2018-06-19T13:27:21Z" data-provider="sourceFilesThatShouldPass" finished-at="2018-06-19T13:27:21Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[EndMethodNotMissingInNesting]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldPassWhen -->
+        <test-method status="PASS" signature="compilationShouldPassWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldPassWhen" duration-ms="55" started-at="2018-06-19T13:27:21Z" data-provider="sourceFilesThatShouldPass" finished-at="2018-06-19T13:27:21Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[NestedEndMethodNotMissing]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldPassWhen -->
+        <test-method status="PASS" signature="compilationShouldPassWhen(java.lang.String)[pri:0, instance:fluent.api.EndProcessorTest@340f438e]" name="compilationShouldPassWhen" duration-ms="34" started-at="2018-06-19T13:27:21Z" data-provider="sourceFilesThatShouldPass" finished-at="2018-06-19T13:27:21Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[ExternalEndMethodNotMissing]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- compilationShouldPassWhen -->
+      </class> <!-- fluent.api.EndProcessorTest -->
+    </test> <!-- Command line test -->
+  </suite> <!-- fluent.api.EndProcessorTest -->
+</testng-results>
