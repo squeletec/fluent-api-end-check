@@ -46,7 +46,7 @@ import static java.util.stream.Collectors.joining;
 public class MarkdownReporter implements ITestListener {
 
     private final String name = "Fluent API end check";
-    private final String version = "1.5";
+    private final String version = "1.X-SNAPSHOT";
 
     private final PrintWriter output = new PrintWriter(new OutputStreamWriter(new FileOutputStream("TEST-REPORT-" + version + ".md")));
 

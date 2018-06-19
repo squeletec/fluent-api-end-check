@@ -75,7 +75,7 @@ public class EndProcessorTest {
                 {FAIL, "NestedEndMethodMissing"},
                 {FAIL, "ExternalEndMethodMissing"},
                 {FAIL, "ExternalGenericEndMethodMissing"},
-                {PASS, "ImmediateEndMethodMissingAfterAnonymousClass"}
+                {FAIL, "ImmediateEndMethodMissingAfterAnonymousClass"}
         };
     }
 
