@@ -62,12 +62,12 @@ public class MarkdownReporter implements ITestListener {
     }
     @Override
     public void onTestSuccess(ITestResult iTestResult) {
-        test("✔", iTestResult);
+        test("![PASSED](icons8-passed-18.png)", iTestResult);
     }
 
     @Override
     public void onTestFailure(ITestResult iTestResult) {
-        test("✘", iTestResult);
+        test("![FAILED](icons8-failed-18.png)", iTestResult);
         output.println("```");
         output.println(iTestResult.getThrowable());
         output.println("```");
