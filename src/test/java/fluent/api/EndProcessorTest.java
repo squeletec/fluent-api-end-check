@@ -39,42 +39,46 @@ import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.util.List;
 
-import static fluent.api.EndProcessorTest.Expectation.failWhen;
-import static fluent.api.EndProcessorTest.Expectation.passWhen;
+import static fluent.api.EndProcessorTest.Expectation.FAIL;
+import static fluent.api.EndProcessorTest.Expectation.PASS;
 import static java.util.Collections.emptyList;
 
 public class EndProcessorTest {
 
-    enum Expectation {passWhen, failWhen}
+    enum Expectation {PASS, FAIL;
+        @Override public String toString() {
+            return "Compilation should " + name().toLowerCase() + " when ";
+        }
+    }
 
     @DataProvider
     public static Object[][] sourceFiles() {
         return new Object[][]{
-                {passWhen, "EndMethodNotMissing"},
-                {passWhen, "PassThroughEndMethodNotMissing"},
-                {passWhen, "EndMethodMissingInAssignment"},
-                {passWhen, "EndMethodCheckIgnored"},
-                {passWhen, "EndMethodNotMissingInNesting"},
-                {passWhen, "NestedEndMethodNotMissing"},
-                {passWhen, "ExternalEndMethodNotMissing"},
-                {passWhen, "ExternalGenericEndMethodNotMissing"},
-                {passWhen, "ExternalGenericEndMethodWithParameterNotMissing"},
-                {passWhen, "ExternalGenericEndMethodWithGenericParameterNotMissing"},
+                {PASS, "EndMethodNotMissing"},
+                {PASS, "PassThroughEndMethodNotMissing"},
+                {PASS, "EndMethodMissingInAssignment"},
+                {PASS, "EndMethodCheckIgnored"},
+                {PASS, "EndMethodNotMissingInNesting"},
+                {PASS, "NestedEndMethodNotMissing"},
+                {PASS, "ExternalEndMethodNotMissing"},
+                {PASS, "ExternalGenericEndMethodNotMissing"},
+                {PASS, "ExternalGenericEndMethodWithParameterNotMissing"},
+                {PASS, "ExternalGenericEndMethodWithGenericParameterNotMissing"},
 
-                {failWhen, "ImmediateEndMethodMissing"},
-                {failWhen, "ImmediateEndMethodMissingAfterConstructor"},
-                {failWhen, "EndMethodMissing"},
-                {failWhen, "EndMethodMissingInNesting"},
-                {failWhen, "UnmarkedEndMethod"},
-                {failWhen, "NestedEndMethodMissing"},
-                {failWhen, "ExternalEndMethodMissing"},
-                {failWhen, "ExternalGenericEndMethodMissing"},
-                {failWhen, "ImmediateEndMethodMissingAfterAnonymousClass"}
+                {FAIL, "ImmediateEndMethodMissing"},
+                {FAIL, "ImmediateEndMethodMissingAfterConstructor"},
+                {FAIL, "EndMethodMissing"},
+                {FAIL, "EndMethodMissingInNesting"},
+                {FAIL, "UnmarkedEndMethod"},
+                {FAIL, "NestedEndMethodMissing"},
+                {FAIL, "ExternalEndMethodMissing"},
+                {FAIL, "ExternalGenericEndMethodMissing"},
+                {FAIL, "ImmediateEndMethodMissingAfterAnonymousClass"}
         };
     }
 
     @Test(dataProvider = "sourceFiles")
-    public void compilationShould(Expectation expected, String className) throws URISyntaxException {
+    public void test(Expectation expected, String className) throws URISyntaxException {
         DiagnosticCollector<JavaFileObject> listener = new DiagnosticCollector<>();
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
@@ -85,7 +89,7 @@ public class EndProcessorTest {
         if (!diagnostics.isEmpty()) {
             System.out.println(diagnostics);
         }
-        Assert.assertEquals(result, expected == passWhen, diagnostics.toString());
+        Assert.assertEquals(result, expected == PASS, diagnostics.toString());
     }
 
 }
