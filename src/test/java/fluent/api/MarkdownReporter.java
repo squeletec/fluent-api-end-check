@@ -37,16 +37,16 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 
+import static java.time.ZonedDateTime.now;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
 public class MarkdownReporter implements ITestListener {
 
-    private final String name = "Fluent API end check";
-    private final String version = "1.X-SNAPSHOT";
+    private final String name = System.getProperty("project.name");
+    private final String version = System.getProperty("project.version");
 
     private final PrintWriter output = new PrintWriter(new OutputStreamWriter(new FileOutputStream("TEST-REPORT-" + version + ".md")));
 
@@ -85,9 +85,9 @@ public class MarkdownReporter implements ITestListener {
 
     @Override
     public void onStart(ITestContext iTestContext) {
-        output.println("## " + name + " v" + version);
+        output.println("## " + name + " " + version);
         output.println("#### Test results");
-        output.println(ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME));
+        output.println(now().format(RFC_1123_DATE_TIME));
         output.println();
         output.println("[EndProcessorTest](src/test/java/fluent/api/EndProcessorTest.java)");
     }
