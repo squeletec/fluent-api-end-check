@@ -175,7 +175,7 @@
                 <executions>
                     <execution>
                         <id>commit test report</id>
-                        <phase>verify</phase>
+                        <phase>deploy</phase>
                         <goals>
                             <goal>add</goal>
                             <goal>checkin</goal>
