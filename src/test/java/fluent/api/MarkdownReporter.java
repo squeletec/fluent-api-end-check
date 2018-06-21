@@ -92,6 +92,8 @@ public class MarkdownReporter implements ITestListener {
                 ? version.equals(parameter) ? "_(new in " + parameter + ")_" : "_([since " + parameter + "](" + report(parameter) + "))_"
                 : uncamel(String.valueOf(parameter))
         ).collect(joining(" ")));
+        Object src = testResult.getParameters()[1];
+        output.println("Compiler source code: [" + src + ".java](../src/test/resources/fluent/api/" + src + ".java)");
     }
 
     @Override

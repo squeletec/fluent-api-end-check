@@ -175,7 +175,7 @@
                 <executions>
                     <execution>
                         <id>commit test report</id>
-                        <phase>package</phase>
+                        <phase>verify</phase>
                         <goals>
                             <goal>add</goal>
                             <goal>checkin</goal>
@@ -185,7 +185,7 @@
                 <configuration>
                     <includes>reports/TEST-REPORT-${project.version}.md</includes>
                     <pushChanges>true</pushChanges>
-                    <message>Test report for version ${project.version}</message>
+                    <message>Test report for release ${project.version}</message>
                 </configuration>
             </plugin>
         </plugins>
