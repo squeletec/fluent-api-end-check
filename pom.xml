@@ -3,7 +3,7 @@
 
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>1.7-SNAPSHOT</version>
+    <version>1.6-SNAPSHOT</version>
     <modelVersion>4.0.0</modelVersion>
 
     <name>Fluent API sentence end check.</name>
