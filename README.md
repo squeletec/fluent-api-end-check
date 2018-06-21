@@ -67,7 +67,7 @@ In order to be able to mark ending method using `@End` annotation, following dep
 <dependency>
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>1.5</version>
+    <version>1.7</version>
 </dependency>
 ```
 To figure out, what's the latest available version, use following search link in maven central:
@@ -186,7 +186,7 @@ It can be done e.g. using maven compiler plugin:
                     <annotationProcessorPath>
                         <groupId>foundation.fluent.api</groupId>
                         <artifactId>fluent-api-end-check</artifactId>
-                        <version>1.5</version>
+                        <version>1.7</version>
                     </annotationProcessorPath>
                 </annotationProcessorPaths>
             </configuration>
@@ -233,6 +233,17 @@ public class TestFluentApi {
 Without ignoring the end method check, this test method would throw compilation error.
 
 ## Release notes
+
+#### Version 1.7 (June 21st 2018)
+- Delivered [#7: Include generation and commit of test evidence in the release process.](https://github.com/c0stra/fluent-api-end-check/issues/7)
+- Test evidence is now automatically generated during release process.
+
+[Test evidence for 1.7](reports/TEST-REPORT-1.7.md)
+
+#### Version 1.6 (June 21st 2018)
+- Improved readability of test evidence
+
+[Test evidence for 1.6](reports/TEST-REPORT-1.6.md)
 
 #### Version 1.5 (June 12th 2018)
 - Some tweaks to the release process in the pom.xml
