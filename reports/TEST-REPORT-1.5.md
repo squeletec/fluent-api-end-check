@@ -2,7 +2,7 @@
 #### Test results
 Tue, 19 Jun 2018 17:16:07 +0200
 
-[EndProcessorTest](src/test/java/fluent/api/EndProcessorTest.java)
+[EndProcessorTest](../src/test/java/fluent/api/EndProcessorTest.java)
 ##### ![PASSED](icons8-passed-18.png)  compilationShouldFailWhen ImmediateEndMethodMissing _([since 1.3](TEST-REPORT-1.3.md))_
 ##### ![PASSED](icons8-passed-18.png)  compilationShouldFailWhen ImmediateEndMethodMissingAfterConstructor _([since 1.4](TEST-REPORT-1.4.md))_
 ##### ![PASSED](icons8-passed-18.png)  compilationShouldFailWhen EndMethodMissing _([since 1.0](TEST-REPORT-1.0.md))_

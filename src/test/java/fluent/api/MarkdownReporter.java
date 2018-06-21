@@ -38,6 +38,9 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
+import static java.lang.Character.isUpperCase;
+import static java.lang.Character.toLowerCase;
+import static java.lang.Character.toUpperCase;
 import static java.time.ZonedDateTime.now;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static java.util.Arrays.stream;
@@ -46,20 +49,51 @@ import static java.util.stream.Collectors.joining;
 public class MarkdownReporter implements ITestListener {
 
     private final String name = System.getProperty("project.name");
-    private final String version = System.getProperty("project.version");
+    private final Version version = new Version(System.getProperty("project.version"));
 
-    private final PrintWriter output = new PrintWriter(new OutputStreamWriter(new FileOutputStream("TEST-REPORT-" + version + ".md")));
+    private final PrintWriter output = new PrintWriter(new OutputStreamWriter(new FileOutputStream("reports/" + report(version))));
 
-    public MarkdownReporter() throws FileNotFoundException {
+    public MarkdownReporter() throws FileNotFoundException { }
+
+    private static String report(Object version) {
+        return "TEST-REPORT-" + version + ".md";
     }
 
     @Override
-    public void onTestStart(ITestResult iTestResult) {
+    public void onTestStart(ITestResult iTestResult) { }
+
+    private static String uncamel(String camelCase) {
+        if(camelCase.isEmpty()) {
+            return camelCase;
+        }
+        StringBuilder string = new StringBuilder(camelCase.substring(0, 1).toLowerCase());
+        for(int i = 1; i < camelCase.length(); i++) {
+            char character = camelCase.charAt(i);
+            if(isUpperCase(character)) {
+                string.append(' ').append(toLowerCase(character));
+            } else {
+                string.append(character);
+            }
+        }
+        return string.toString();
+    }
+
+    private static String capitalize(String string) {
+        return toUpperCase(string.charAt(0)) + string.substring(1);
     }
 
     private void test(String result, ITestResult testResult) {
-        output.println("##### " + result + "  " + stream(testResult.getParameters()).map(Object::toString).collect(joining(" ")));
+        output.print("##### ");
+        output.print(result);
+        output.print(" ");
+        output.print(capitalize(uncamel(testResult.getMethod().getMethodName())));
+        output.print(" ");
+        output.println(stream(testResult.getParameters()).map(parameter -> parameter instanceof Version
+                ? version.equals(parameter) ? "_(new in " + parameter + ")_" : "_([since " + parameter + "](" + report(parameter) + "))_"
+                : uncamel(String.valueOf(parameter))
+        ).collect(joining(" ")));
     }
+
     @Override
     public void onTestSuccess(ITestResult iTestResult) {
         test("![PASSED](icons8-passed-18.png)", iTestResult);
@@ -80,7 +114,6 @@ public class MarkdownReporter implements ITestListener {
 
     @Override
     public void onTestFailedButWithinSuccessPercentage(ITestResult iTestResult) {
-
     }
 
     @Override
@@ -89,7 +122,7 @@ public class MarkdownReporter implements ITestListener {
         output.println("#### Test results");
         output.println(now().format(RFC_1123_DATE_TIME));
         output.println();
-        output.println("[EndProcessorTest](src/test/java/fluent/api/EndProcessorTest.java)");
+        output.println("[EndProcessorTest](../src/test/java/fluent/api/EndProcessorTest.java)");
     }
 
     @Override

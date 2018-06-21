@@ -40,47 +40,44 @@ import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.util.List;
 
-import static fluent.api.EndProcessorTest.Expectation.FAIL;
-import static fluent.api.EndProcessorTest.Expectation.PASS;
+import static fluent.api.EndProcessorTest.Expectation.FailWhen;
+import static fluent.api.EndProcessorTest.Expectation.PassWhen;
+import static fluent.api.Version.since;
 import static java.util.Collections.emptyList;
 
 @Listeners(MarkdownReporter.class)
 public class EndProcessorTest {
 
-    enum Expectation {PASS, FAIL;
-        @Override public String toString() {
-            return "Compilation should " + name().toLowerCase() + " when ";
-        }
-    }
+    enum Expectation {PassWhen, FailWhen;}
 
     @DataProvider
     public static Object[][] sourceFiles() {
         return new Object[][]{
-                {PASS, "EndMethodNotMissing"},
-                {PASS, "PassThroughEndMethodNotMissing"},
-                {PASS, "EndMethodMissingInAssignment"},
-                {PASS, "EndMethodCheckIgnored"},
-                {PASS, "EndMethodNotMissingInNesting"},
-                {PASS, "NestedEndMethodNotMissing"},
-                {PASS, "ExternalEndMethodNotMissing"},
-                {PASS, "ExternalGenericEndMethodNotMissing"},
-                {PASS, "ExternalGenericEndMethodWithParameterNotMissing"},
-                {PASS, "ExternalGenericEndMethodWithGenericParameterNotMissing"},
+                {PassWhen, "EndMethodNotMissing", since(1.0)},
+                {PassWhen, "PassThroughEndMethodNotMissing", since(1.1)},
+                {PassWhen, "EndMethodMissingInAssignment", since(1.0)},
+                {PassWhen, "EndMethodCheckIgnored", since(1.0)},
+                {PassWhen, "EndMethodNotMissingInNesting", since(1.1)},
+                {PassWhen, "NestedEndMethodNotMissing", since(1.1)},
+                {PassWhen, "ExternalEndMethodNotMissing", since(1.2)},
+                {PassWhen, "ExternalGenericEndMethodNotMissing", since(1.3)},
+                {PassWhen, "ExternalGenericEndMethodWithParameterNotMissing", since(1.3)},
+                {PassWhen, "ExternalGenericEndMethodWithGenericParameterNotMissing", since(1.3)},
 
-                {FAIL, "ImmediateEndMethodMissing"},
-                {FAIL, "ImmediateEndMethodMissingAfterConstructor"},
-                {FAIL, "EndMethodMissing"},
-                {FAIL, "EndMethodMissingInNesting"},
-                {FAIL, "UnmarkedEndMethod"},
-                {FAIL, "NestedEndMethodMissing"},
-                {FAIL, "ExternalEndMethodMissing"},
-                {FAIL, "ExternalGenericEndMethodMissing"},
-                {FAIL, "ImmediateEndMethodMissingAfterAnonymousClass"}
+                {FailWhen, "ImmediateEndMethodMissing", since(1.3)},
+                {FailWhen, "ImmediateEndMethodMissingAfterConstructor", since(1.4)},
+                {FailWhen, "EndMethodMissing", since(1.0)},
+                {FailWhen, "EndMethodMissingInNesting", since(1.1)},
+                {FailWhen, "UnmarkedEndMethod", since(1.1)},
+                {FailWhen, "NestedEndMethodMissing", since(1.1)},
+                {FailWhen, "ExternalEndMethodMissing", since(1.2)},
+                {FailWhen, "ExternalGenericEndMethodMissing", since(1.3)},
+                {FailWhen, "ImmediateEndMethodMissingAfterAnonymousClass", since("1.6-SNAPSHOT")}
         };
     }
 
     @Test(dataProvider = "sourceFiles")
-    public void test(Expectation expected, String className) throws URISyntaxException {
+    public void compilationShould(Expectation expected, String className, Version since) throws URISyntaxException {
         DiagnosticCollector<JavaFileObject> listener = new DiagnosticCollector<>();
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
@@ -91,7 +88,7 @@ public class EndProcessorTest {
         if (!diagnostics.isEmpty()) {
             System.out.println(diagnostics);
         }
-        Assert.assertEquals(result, expected == PASS, diagnostics.toString());
+        Assert.assertEquals(result, expected == PassWhen, diagnostics.toString());
     }
 
 }

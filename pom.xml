@@ -65,6 +65,13 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.7</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
@@ -159,6 +166,25 @@
                         <project.name>${project.name}</project.name>
                         <project.version>${project.version}</project.version>
                     </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-scm-plugin</artifactId>
+                <version>1.10.0</version>
+                <executions>
+                    <execution>
+                        <id>commit test report</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add</goal>
+                            <goal>checkin</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includes>reports/TEST-REPORT-${project.version}.md</includes>
+                    <pushChanges>true</pushChanges>
                 </configuration>
             </plugin>
         </plugins>
