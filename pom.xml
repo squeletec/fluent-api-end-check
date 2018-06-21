@@ -185,6 +185,7 @@
                 <configuration>
                     <includes>reports/TEST-REPORT-${project.version}.md</includes>
                     <pushChanges>true</pushChanges>
+                    <message>Test report for version ${project.version}</message>
                 </configuration>
             </plugin>
         </plugins>
