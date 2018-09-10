@@ -36,7 +36,7 @@ import com.sun.source.util.Trees;
 import fluent.api.End;
 import fluent.api.IgnoreMissingEndMethod;
 
-import javax.lang.model.element.Element;
+import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.*;
@@ -91,18 +91,41 @@ class EndScanner extends TreePathScanner<Void, Void> {
 				: "the method: ") + m;
 	}
 
-	@Override
-	public Void visitExpressionStatement(ExpressionStatementTree statement, Void aVoid) {
-		ExpressionTree expression = statement.getExpression();
+	private void inspectExpression(ExpressionTree expression, Tree statement) {
 		if (expression.getKind() != ASSIGNMENT) {
 			Element element = element(expression);
-			if(nonNull(element)) {
+			if (nonNull(element)) {
 				Set<String> methods = new HashSet<>(getMethods(expression));
 				Boolean hasEnd = expression.accept(startScanner, methods);
-				if(!(TRUE.equals(hasEnd) || methods.isEmpty())) {
+				if (!(TRUE.equals(hasEnd) || methods.isEmpty())) {
 					trees.printMessage(ERROR, message(methods), statement, getCurrentPath().getCompilationUnit());
 				}
 			}
+		}
+	}
+
+	@Override
+	public Void visitExpressionStatement(ExpressionStatementTree statement, Void aVoid) {
+		inspectExpression(statement.getExpression(), statement);
+		return statement.getExpression().accept(this, aVoid);
+	}
+
+	private boolean isVoidLambda(Tree tree) {
+		return types.asElement(trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree))).getEnclosedElements().stream().anyMatch(m -> m.accept(new VoidLambdaDetector(), null));
+	}
+
+	@Override
+	public Void visitLambdaExpression(LambdaExpressionTree tree, Void aVoid) {
+		if(tree.getBodyKind() == LambdaExpressionTree.BodyKind.EXPRESSION && isVoidLambda(tree)) {
+			inspectExpression((ExpressionTree) tree.getBody(), tree);
+		}
+		return tree.getBody().accept(this, aVoid);
+	}
+
+	@Override
+	public Void visitMemberReference(MemberReferenceTree tree, Void aVoid) {
+		if(isVoidLambda(tree)) {
+
 		}
 		return aVoid;
 	}
@@ -140,6 +163,48 @@ class EndScanner extends TreePathScanner<Void, Void> {
 		return endMethodsCache.getOrDefault(method.getEnclosingElement().toString(), emptySet()).contains(method.toString());
 	}
 
+	private static class VoidLambdaDetector implements ElementVisitor<Boolean, Void> {
+		@Override
+		public Boolean visit(Element e, Void o) {
+			return false;
+		}
+
+		@Override
+		public Boolean visit(Element e) {
+			return false;
+		}
+
+		@Override
+		public Boolean visitPackage(PackageElement e, Void o) {
+			return false;
+		}
+
+		@Override
+		public Boolean visitType(TypeElement e, Void o) {
+			return false;
+		}
+
+		@Override
+		public Boolean visitVariable(VariableElement e, Void o) {
+			return false;
+		}
+
+		@Override
+		public Boolean visitExecutable(ExecutableElement e, Void o) {
+			return !e.isDefault() && !e.getModifiers().contains(Modifier.STATIC) && "void".equals(e.getReturnType().toString());
+		}
+
+		@Override
+		public Boolean visitTypeParameter(TypeParameterElement e, Void o) {
+			return false;
+		}
+
+		@Override
+		public Boolean visitUnknown(Element e, Void o) {
+			return false;
+		}
+	}
+
 	/**
 	 * This scanner is drilling down the chain of method calls (fluent API sentence), to identify all points in the chain,
 	 * that may require some ending method.
@@ -163,7 +228,7 @@ class EndScanner extends TreePathScanner<Void, Void> {
 				return true;
 			}
 			// Only drill down if we didn't encounter an ending method.
-			super.visitMethodInvocation(tree, methods);
+			tree.getMethodSelect().accept(this, methods);
 			return methods.isEmpty();
 		}
 
