@@ -36,6 +36,7 @@ import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -74,7 +75,11 @@ public class EndProcessor extends AbstractProcessor {
 			}
 
 			@Override public void finished(TaskEvent taskEvent) {
-				if(taskEvent.getKind() == ANALYZE) scanner.scan(taskEvent.getCompilationUnit(), null);
+				if(taskEvent.getKind() == ANALYZE) try {
+					scanner.scan(taskEvent.getCompilationUnit(), null);
+				} catch (RuntimeException runtimeException) {
+					env.getMessager().printMessage(Diagnostic.Kind.WARNING, "Unable to finish @End method check: " + runtimeException, taskEvent.getTypeElement());
+				}
 			}
 		});
 	}

@@ -125,9 +125,15 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	@Override
 	public Void visitMemberReference(MemberReferenceTree tree, Void aVoid) {
 		if(isVoidLambda(tree)) {
-
+			ExpressionTree expression = tree.getQualifierExpression();
+			Set<String> methods = new HashSet<>(getMethods(expression));
+			tree.accept(startScanner, methods);
+			Element element = element(tree);
+			if(!element.accept(new MissingRequiredMethodReferenceDetector(methods), null)) {
+				trees.printMessage(ERROR, message(methods), tree, getCurrentPath().getCompilationUnit());
+			}
 		}
-		return aVoid;
+		return tree.getQualifierExpression().accept(this, aVoid);
 	}
 
 	private Element element(Tree tree) {
@@ -144,8 +150,7 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	}
 
 	private Set<String> getMethods(Element element) {
-		Set<String> methods = element.getEnclosedElements().stream().filter(EndScanner::isAnnotatedEndMethod)
-				.map(Object::toString).collect(toSet());
+		Set<String> methods = element.getEnclosedElements().stream().filter(EndScanner::isAnnotatedEndMethod).map(Object::toString).collect(toSet());
 		types.directSupertypes(element.asType()).forEach(type -> methods.addAll(getMethods(type)));
 		// Let's save some memory on set instances. All classes without any ending methods share one instance.
 		return methods.isEmpty() ? emptySet() : methods;
@@ -163,44 +168,37 @@ class EndScanner extends TreePathScanner<Void, Void> {
 		return endMethodsCache.getOrDefault(method.getEnclosingElement().toString(), emptySet()).contains(method.toString());
 	}
 
+
 	private static class VoidLambdaDetector implements ElementVisitor<Boolean, Void> {
-		@Override
-		public Boolean visit(Element e, Void o) {
+		@Override public Boolean visit(Element e, Void o) {
 			return false;
 		}
 
-		@Override
-		public Boolean visit(Element e) {
+		@Override public Boolean visit(Element e) {
 			return false;
 		}
 
-		@Override
-		public Boolean visitPackage(PackageElement e, Void o) {
+		@Override public Boolean visitPackage(PackageElement e, Void o) {
 			return false;
 		}
 
-		@Override
-		public Boolean visitType(TypeElement e, Void o) {
+		@Override public Boolean visitType(TypeElement e, Void o) {
 			return false;
 		}
 
-		@Override
-		public Boolean visitVariable(VariableElement e, Void o) {
+		@Override public Boolean visitVariable(VariableElement e, Void o) {
 			return false;
 		}
 
-		@Override
-		public Boolean visitExecutable(ExecutableElement e, Void o) {
+		@Override public Boolean visitExecutable(ExecutableElement e, Void o) {
 			return !e.isDefault() && !e.getModifiers().contains(Modifier.STATIC) && "void".equals(e.getReturnType().toString());
 		}
 
-		@Override
-		public Boolean visitTypeParameter(TypeParameterElement e, Void o) {
+		@Override public Boolean visitTypeParameter(TypeParameterElement e, Void o) {
 			return false;
 		}
 
-		@Override
-		public Boolean visitUnknown(Element e, Void o) {
+		@Override public Boolean visitUnknown(Element e, Void o) {
 			return false;
 		}
 	}
@@ -211,8 +209,7 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	 */
 	private class StartScanner extends TreeScanner<Boolean, Set<String>> {
 
-		@Override
-		public Boolean visitMethodInvocation(MethodInvocationTree tree, Set<String> methods) {
+		@Override public Boolean visitMethodInvocation(MethodInvocationTree tree, Set<String> methods) {
 			Element method = element(tree);
 			/*
 			 * 1. If the method element represents constructor, which is invoked as method (method invocation), then it
@@ -232,8 +229,7 @@ class EndScanner extends TreePathScanner<Void, Void> {
 			return methods.isEmpty();
 		}
 
-		@Override
-		public Boolean visitMemberSelect(MemberSelectTree tree, Set<String> methods) {
+		@Override public Boolean visitMemberSelect(MemberSelectTree tree, Set<String> methods) {
 			// First drill down further.
 			tree.getExpression().accept(this, methods);
 			// Now get required methods for the type, to which the expression evaluates, on which we select the method.
@@ -243,4 +239,48 @@ class EndScanner extends TreePathScanner<Void, Void> {
 
 	}
 
+	private class MissingRequiredMethodReferenceDetector implements ElementVisitor<Boolean, Object> {
+		private final Set<String> methods;
+
+		private MissingRequiredMethodReferenceDetector(Set<String> methods) {
+			this.methods = methods;
+		}
+
+		@Override public Boolean visit(Element e, Object o) {
+			return true;
+		}
+
+		@Override public Boolean visit(Element e) {
+			return true;
+		}
+
+		@Override public Boolean visitPackage(PackageElement e, Object o) {
+			return true;
+		}
+
+		@Override public Boolean visitType(TypeElement e, Object o) {
+			return true;
+		}
+
+		@Override public Boolean visitVariable(VariableElement e, Object o) {
+			return true;
+		}
+
+		@Override public Boolean visitExecutable(ExecutableElement e, Object o) {
+			if(isAnnotatedEndMethod(e)) {
+				return true;
+			}
+			Element returnType = e.getKind() == CONSTRUCTOR ? e.getEnclosingElement() : types.asElement(e.getReturnType());
+			methods.addAll(getMethods(returnType));
+			return methods.isEmpty();
+		}
+
+		@Override public Boolean visitTypeParameter(TypeParameterElement e, Object o) {
+			return true;
+		}
+
+		@Override public Boolean visitUnknown(Element e, Object o) {
+			return true;
+		}
+	}
 }

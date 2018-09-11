@@ -54,6 +54,7 @@ public class EndProcessorTest {
     public static Object[][] sourceFiles() {
         return new Object[][]{
                 {PassWhen, "EndMethodNotMissing", since(1.0)},
+                {PassWhen, "ContinueAfterEndMethod", since(1.8)},
                 {PassWhen, "PassThroughEndMethodNotMissing", since(1.1)},
                 {PassWhen, "EndMethodMissingInAssignment", since(1.0)},
                 {PassWhen, "EndMethodCheckIgnored", since(1.0)},
@@ -76,7 +77,8 @@ public class EndProcessorTest {
                 {FailWhen, "ExternalGenericEndMethodMissing", since(1.3)},
                 {FailWhen, "ImmediateEndMethodMissingAfterAnonymousClass", since(1.6)},
                 {FailWhen, "EndMethodMissingInConsumerExpression", since(1.8)},
-                //{FailWhen, "EndMethodMissingInConsumerReference", since(1.8)},
+                {FailWhen, "EndMethodMissingInConsumerReference", since(1.8)},
+                {FailWhen, "EndMethodMissingInConsumerConstructor", since(1.8)},
         };
     }
 
@@ -93,6 +95,9 @@ public class EndProcessorTest {
             System.out.println(diagnostics);
         }
         Assert.assertEquals(result, expected == PassWhen, diagnostics.toString());
+        if(expected == FailWhen) {
+            Assert.assertTrue(diagnostics.toString().contains("Method chain must end with "));
+        }
     }
 
 }

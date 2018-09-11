@@ -29,51 +29,8 @@
 
 package fluent.api;
 
-/**
- * Dsl interface allowing chaining of method add(), but with required terminal method end().
- */
-public class Dsl {
+public interface Result {
 
-    /**
-     * Method allowing chaining.
-     *
-     * @return The DSL to continue chaining.
-     */
-    public Dsl add() {
-        return this;
-    }
-
-    /**
-     * Terminal method, that needs to be invoked at the end of the chain.
-     */
-    @End
-    public void end() {
-
-    }
-
-    /**
-     * Another terminal method, that needs to be invoked at the end of the chain.
-     */
-    @End
-    public Dsl cancel() {
-        return this;
-    }
-
-    public Nested nested() {
-        return null;
-    }
-
-    public void wrongEnd() {
-
-    }
-
-    public NestedAllowingEnd nestedAllowingEnd() {
-        return null;
-    }
-
-    @End
-    public Result result() {
-        return null;
-    }
+    int getInt();
 
 }

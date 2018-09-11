@@ -2,7 +2,7 @@ package fluent.api;
 
 import fluent.api.Dsl;
 
-public class NestedEndMethodNotMissing {
+public class NestedEndMethodMissing {
 
 	public void method(Dsl dsl) {
 		dsl.end();
