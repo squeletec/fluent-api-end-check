@@ -67,7 +67,7 @@ In order to be able to mark ending method using `@End` annotation, following dep
 <dependency>
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>1.7</version>
+    <version>1.8</version>
 </dependency>
 ```
 To figure out, what's the latest available version, use following search link in maven central:
@@ -233,6 +233,12 @@ public class TestFluentApi {
 Without ignoring the end method check, this test method would throw compilation error.
 
 ## Release notes
+
+#### Version 1.8 (September 11th 2018)
+- Fixed [#8: Check is not catching properly missing end method in lambda expression or method reference.](https://github.com/c0stra/fluent-api-end-check/issues/8)
+- Removed unused dependencies.
+
+[Test evidence for 1.8](reports/TEST-REPORT-1.8.md)
 
 #### Version 1.7 (June 21st 2018)
 - Delivered [#7: Include generation and commit of test evidence in the release process.](https://github.com/c0stra/fluent-api-end-check/issues/7)
