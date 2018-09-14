@@ -40,7 +40,9 @@ import javax.tools.Diagnostic;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Writer;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashSet;
@@ -54,6 +56,7 @@ import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.joining;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.tools.Diagnostic.Kind.WARNING;
+import static javax.tools.StandardLocation.SOURCE_OUTPUT;
 
 /**
  * Pseudo annotation processor of special annotation @End marking terminal methods in fluent API. It actually doesn't do
@@ -68,11 +71,11 @@ public class EndProcessor extends AbstractProcessor {
 	@Override
 	public synchronized void init(ProcessingEnvironment env) {
 		super.init(env);
+		markChecked(env.getFiler());
 		JavacTask.instance(env).addTaskListener(new TaskListener() {
 			private EndScanner scanner = new EndScanner(loadEndMethodsFromFiles(), Trees.instance(env), env.getTypeUtils());
 
-			@Override public void started(TaskEvent taskEvent) {
-			}
+			@Override public void started(TaskEvent taskEvent) { }
 
 			@Override public void finished(TaskEvent taskEvent) {
 				if(taskEvent.getKind() == ANALYZE) try {
@@ -87,6 +90,14 @@ public class EndProcessor extends AbstractProcessor {
 	@Override
 	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 		return false;
+	}
+
+	private void markChecked(Filer filer) {
+		try(Writer writer = filer.createResource(SOURCE_OUTPUT, "", "required-method.checked").openWriter()) {
+			writer.write("Checked\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private Map<String, Set<String>> loadEndMethodsFromFiles() {
