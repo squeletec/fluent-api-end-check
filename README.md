@@ -211,7 +211,7 @@ would apply.
 | Return statement      | return config.set("", "");   | __NO__ - may end outside |
 
 
-### 3.2 How to bypass the check using `@IgnoreMissingEndMethod`
+#### 3.2 How to bypass the check using `@IgnoreMissingEndMethod`
 Although the check itself tries to recognize situations, when it shouldn't apply the check, there might
 be situations, when it would apply it, but it's still not desired. For such cases an annotation
 `@IgnoreMissingEndMethod` can be used on a method, to bypass it's statements for such check.
@@ -233,6 +233,11 @@ public class TestFluentApi {
 Without ignoring the end method check, this test method would throw compilation error.
 
 ## Release notes
+
+#### Version 1.9 (September 18th 2018)
+- Ignore end methods on `this`. That indicates, usage inside implementation of the fluent API, not by clients.
+
+[Test evidence for 1.9](reports/TEST-REPORT-1.9.md)
 
 #### Version 1.8 (September 11th 2018)
 - Fixed [#8: Check is not catching properly missing end method in lambda expression or method reference.](https://github.com/c0stra/fluent-api-end-check/issues/8)
