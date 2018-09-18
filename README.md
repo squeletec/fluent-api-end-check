@@ -67,7 +67,7 @@ In order to be able to mark ending method using `@End` annotation, following dep
 <dependency>
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>1.8</version>
+    <version>1.9</version>
 </dependency>
 ```
 To figure out, what's the latest available version, use following search link in maven central:
@@ -186,7 +186,7 @@ It can be done e.g. using maven compiler plugin:
                     <annotationProcessorPath>
                         <groupId>foundation.fluent.api</groupId>
                         <artifactId>fluent-api-end-check</artifactId>
-                        <version>1.7</version>
+                        <version>1.9</version>
                     </annotationProcessorPath>
                 </annotationProcessorPaths>
             </configuration>
