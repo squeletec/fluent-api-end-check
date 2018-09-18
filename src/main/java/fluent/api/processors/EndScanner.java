@@ -68,6 +68,9 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	}
 
 	private Set<String> getMethods(Tree tree) {
+		if("this".equals(tree.toString())) {
+			return emptySet();
+		}
 		return getMethods(trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree)));
 	}
 
