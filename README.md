@@ -1,4 +1,5 @@
 # Fluent API sentence end check
+![Released version](https://img.shields.io/maven-central/v/foundation.fluent.api/fluent-api-end-check.svg)
 [![Build Status](https://travis-ci.org/c0stra/fluent-api-end-check.svg?branch=master)](https://travis-ci.org/c0stra/fluent-api-end-check)
 
 Compile time check for end of the method chain in fluent API.
