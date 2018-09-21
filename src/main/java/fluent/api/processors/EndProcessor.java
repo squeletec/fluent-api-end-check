@@ -152,7 +152,7 @@ public class EndProcessor extends AbstractProcessor {
 		}
 		URL url = resources.nextElement();
 		if(resources.hasMoreElements()) {
-			throw new AssertionError("Too many files with the same name: " + uniqueFileName + " found on class-path.\n" +
+			throw new IllegalArgumentException("Too many files with the same name: " + uniqueFileName + " found on class-path.\n" +
 					"Chosen end method check file name is not unique.\n" +
 					"Files found:\n" +
 					url + "\n" + resources.nextElement());

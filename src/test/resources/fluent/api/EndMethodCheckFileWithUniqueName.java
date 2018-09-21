@@ -27,22 +27,16 @@
  *
  */
 
-package fluent.api.processors;
+package fluent.api;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Enumeration;
+import org.testng.annotations.Test;
 
-public class AbstractProcessorActivationTest {
+public class EndMethodCheckFileWithUniqueName {
 
-    public void assertEndProcessorActivationForModule(String moduleName) throws IOException {
-        Enumeration<URL> checked = ClassLoader.getSystemResources("required-method.checked");
-        while(checked.hasMoreElements()) {
-            if(checked.nextElement().sameFile(getClass().getProtectionDomain().getCodeSource().getLocation())) {
-                return;
-            }
-        }
-        throw new AssertionError("Required check wasn't enabled for current project. Check annotation processor configuration.");
-    }
+	@Test
+	@EndMethodCheckFile(uniqueFileName = "EndMethodCheckFileWithUniqueName.file")
+	public void testMethod() {
+
+	}
 
 }
