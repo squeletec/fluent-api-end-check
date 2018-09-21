@@ -233,7 +233,44 @@ public class TestFluentApi {
 ```
 Without ignoring the end method check, this test method would throw compilation error.
 
+### 4. Detection of misconfiguration of the end check
+In large projects, it may become business critical to avoid missed end methods. But there are situations, that the check
+may get disabled by accidental misconfiguration.
+
+Simple example can be, that initially the check is achieved by standard class-path annotation processor resolution
+(see paragraph 2.1), and by introducing another annotation processor using compiler annotation processor path, the class-path
+ones get disabled.
+
+Such situation can lead to potentially missed ending methods, and that in turn in not triggering the actions, which may
+have significant impact.
+
+In order to prevent that, it is possible since version 1.10 to detect such situation e.g. using unit test. It is based
+on new feature of the annotation processor, to generate files, when it finds `@EndMethodCheckFile` annotation.
+
+Such test need to do 2 steps:
+1. Request to generate the end method check file with unique file name within the current class-path
+2. Check for the requested file on class-path.
+
+The library now supports these two actions, so such test can look like this:
+
+```java
+@Test
+@EndMethodCheckFile(uniqueFileName = "my-module-name.file")
+public void failIfRequiredCheckNotInvoked() {
+    EndProcessor.assertThatEndMethodCheckFileExists("my-module-name.file");
+}
+```
+
+Such test will fail if
+* either no such file was found on class-path with the error message, that either creation wasn't requested, or the processor isn't enabled
+* or if more than one file was found on class-path, so the filename is not unique.
+
 ## Release notes
+
+#### Version 1.10 (September 21st 2018)
+- Delivered [#9: Implement support for detection of missing end method check.](https://github.com/c0stra/fluent-api-end-check/issues/9)
+
+[Test evidence for 1.10](reports/TEST-REPORT-1.10.md)
 
 #### Version 1.9 (September 18th 2018)
 - Ignore end methods on `this`. That indicates, usage inside implementation of the fluent API, not by clients.
