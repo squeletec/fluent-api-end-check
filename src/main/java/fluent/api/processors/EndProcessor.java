@@ -31,6 +31,7 @@ package fluent.api.processors;
 
 
 import com.sun.source.util.*;
+import fluent.api.EndMethodCheckFile;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -42,7 +43,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashSet;
@@ -62,7 +62,7 @@ import static javax.tools.StandardLocation.SOURCE_OUTPUT;
  * Pseudo annotation processor of special annotation @End marking terminal methods in fluent API. It actually doesn't do
  * any annotation processing, only hooks on the compiler, and checks missing terminal methods in expression statements.
  */
-@SupportedAnnotationTypes("*")
+@SupportedAnnotationTypes("fluent.api.EndMethodCheckFile")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class EndProcessor extends AbstractProcessor {
 
@@ -71,7 +71,6 @@ public class EndProcessor extends AbstractProcessor {
 	@Override
 	public synchronized void init(ProcessingEnvironment env) {
 		super.init(env);
-		markChecked(env.getFiler());
 		JavacTask.instance(env).addTaskListener(new TaskListener() {
 			private EndScanner scanner = new EndScanner(loadEndMethodsFromFiles(), Trees.instance(env), env.getTypeUtils());
 
@@ -89,15 +88,16 @@ public class EndProcessor extends AbstractProcessor {
 
 	@Override
 	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-		return false;
-	}
+		roundEnv.getElementsAnnotatedWith(EndMethodCheckFile.class).forEach(element -> {
+			EndMethodCheckFile checkFile = element.getAnnotation(EndMethodCheckFile.class);
+			try(Writer writer = processingEnv.getFiler().createResource(SOURCE_OUTPUT, "", checkFile.uniqueFileName()).openWriter()) {
+				writer.write(checkFile.content());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
-	private void markChecked(Filer filer) {
-		try(Writer writer = filer.createResource(SOURCE_OUTPUT, "", "required-method.checked").openWriter()) {
-			writer.write("Checked\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		});
+		return false;
 	}
 
 	private Map<String, Set<String>> loadEndMethodsFromFiles() {
@@ -134,6 +134,29 @@ public class EndProcessor extends AbstractProcessor {
 
 	private Stream<? extends String> methodsOf(Element type) {
 		return type.getEnclosedElements().stream().filter(member -> member.getKind() == METHOD).map(Object::toString);
+	}
+
+	/**
+	 * Assertion method to check, that requested EndMethodCheckFile got created.
+	 * @param uniqueFileName Unique file name to be checked, which should have been previously requested to generate
+	 *                       using the annotation EndMethodCheckFile(uniqueFileName)
+	 */
+	public static void assertThatEndMethodCheckFileExists(String uniqueFileName) throws IOException {
+		Enumeration<URL> resources = ClassLoader.getSystemResources(uniqueFileName);
+		if(!resources.hasMoreElements()) {
+			throw new AssertionError("End method check uniqueFileName named: " + uniqueFileName + " doesn't exist.\n" +
+					"Either you didn't use anywhere the annotation @EndMethodCheckFile(\"" + uniqueFileName + "\")\n" +
+					"or the annotation processor wasn't invoked by the compiler and you have to check it's configuration.\n" +
+					"For more about annotation processor configuration and possible issues see:\n" +
+					"https://github.com/c0stra/fluent-api-end-check");
+		}
+		URL url = resources.nextElement();
+		if(resources.hasMoreElements()) {
+			throw new AssertionError("Too many files with the same name: " + uniqueFileName + " found on class-path.\n" +
+					"Chosen end method check file name is not unique.\n" +
+					"Files found:\n" +
+					url + "\n" + resources.nextElement());
+		}
 	}
 
 }
