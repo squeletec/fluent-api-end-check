@@ -31,6 +31,7 @@ package fluent.api;
 
 import fluent.api.processors.EndProcessor;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.tools.*;
@@ -40,23 +41,38 @@ import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import static fluent.api.EndMethodCheckFileTest.Assertion.ShouldPass;
+import static fluent.api.EndMethodCheckFileTest.Assertion.ShouldThrowAssertionError;
+import static fluent.api.EndMethodCheckFileTest.Assertion.ShouldThrowIllegalArgumentException;
+import static fluent.api.Version.since;
 import static java.util.Arrays.asList;
+import static org.testng.Assert.assertEquals;
 
 public class EndMethodCheckFileTest {
 
-    @Test
-    public void endMethodCheckFile() throws URISyntaxException, IOException {
-        compile("EndMethodCheckFileWithUniqueName");
+    public enum Assertion {
+        ShouldPass, ShouldThrowIllegalArgumentException, ShouldThrowAssertionError
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    public void endMethodCheckFileWithDuplicate() throws URISyntaxException, IOException {
-        compile("EndMethodCheckFileWithDuplicateName");
+    @DataProvider
+    public static Object[][] sourceFiles() {
+        return new Object[][]{
+                {ShouldPass, "EndMethodCheckFileWithUniqueName", since("1.10")},
+                {ShouldThrowIllegalArgumentException, "EndMethodCheckFileWithDuplicateName", since("1.10")},
+                {ShouldThrowAssertionError, "NoEndMethodCheckFile", since("1.10")}
+        };
     }
 
-    @Test(expectedExceptions = AssertionError.class, expectedExceptionsMessageRegExp = ".*End method check uniqueFileName named: NoEndMethodCheckFile\\.file doesn't exist\\..*")
-    public void noEndMethodCheckFileCreated() throws URISyntaxException, IOException {
-        compile("NoEndMethodCheckFile");
+    @Test(dataProvider = "sourceFiles")
+    public void endMethodCheckFile(Assertion assertion, String className, Version since) throws URISyntaxException, IOException {
+        try {
+            compile(className);
+            assertEquals(assertion, Assertion.ShouldPass);
+        } catch (IllegalArgumentException illegalArgument) {
+            assertEquals(assertion, Assertion.ShouldThrowIllegalArgumentException);
+        } catch (AssertionError assertionError) {
+            assertEquals(assertion, Assertion.ShouldThrowAssertionError);
+        }
     }
 
     private void compile(String className) throws URISyntaxException, IOException {

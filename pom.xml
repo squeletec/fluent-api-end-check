@@ -149,6 +149,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.0</version>
                 <configuration>
                     <systemPropertyVariables>
                         <project.name>${project.name}</project.name>
