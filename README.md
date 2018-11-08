@@ -287,6 +287,8 @@ Such test will fail if
 - Fixed compilation failure when qualified static method called on class, which contains `@End` annotated method.
 - Added optional parameter of the annotation to specify custom error message.
 
+[Test evidence for 1.11](reports/TEST-REPORT-1.11.md)
+
 #### Version 1.10 (September 21st 2018)
 - Delivered [#9: Implement support for detection of missing end method check.](https://github.com/c0stra/fluent-api-end-check/issues/9)
 
