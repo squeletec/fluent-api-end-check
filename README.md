@@ -87,7 +87,7 @@ public interface Config {
 
 #### 1.2 Mark using provided list of ending methods
 The project may use 3rd party builders / fluent API, which is not under our control, and therefore ending methods
-cannot be annotated. For such case there is a plan to allow providing a simple plain text file containing list of fully
+cannot be annotated. For such case it's possible to provide simple plain text file containing list of fully
 qualified methods, which are the ending methods to check.
 
 The file with the method names, the processor searches for on class path, is:
@@ -211,8 +211,24 @@ would apply.
 | Passed as argument    | method(config.set("", ""));  | __NO__ - may end inside  |
 | Return statement      | return config.set("", "");   | __NO__ - may end outside |
 
+#### 3.2 Custom compilation error
+Since version `1.11` it is possible to customize the compilation error message using parameter
+`message` of the `@End` annotation:
 
-#### 3.2 How to bypass the check using `@IgnoreMissingEndMethod`
+```java
+public interface FluentApi {
+    @End("Method end() must be called.")
+    void end();
+
+    FluentApi fiend();
+}
+```
+
+If during fluent sentence analysis multiple methods with custom message are detected,
+then only the last message is used.
+
+
+#### 3.3 How to bypass the check using `@IgnoreMissingEndMethod`
 Although the check itself tries to recognize situations, when it shouldn't apply the check, there might
 be situations, when it would apply it, but it's still not desired. For such cases an annotation
 `@IgnoreMissingEndMethod` can be used on a method, to bypass it's statements for such check.
@@ -266,6 +282,10 @@ Such test will fail if
 * or if more than one file was found on class-path, so the filename is not unique.
 
 ## Release notes
+
+#### Version 1.11 (November 8th 2018)
+- Fixed compilation failure when qualified static method called on class, which contains `@End` annotated method.
+- Added optional parameter of the annotation to specify custom error message.
 
 #### Version 1.10 (September 21st 2018)
 - Delivered [#9: Implement support for detection of missing end method check.](https://github.com/c0stra/fluent-api-end-check/issues/9)

@@ -1,6 +1,6 @@
-## Fluent API sentence end check. 1.11
+## Fluent API sentence end check. 1.12-SNAPSHOT
 #### Test results
-Thu, 8 Nov 2018 23:22:26 +0100
+Thu, 8 Nov 2018 23:50:02 +0100
 
 [EndProcessorTest](../src/test/java/fluent/api/EndProcessorTest.java)
 ##### ![PASSED](icons8-passed-18.png) Compilation should pass when end method not missing _([since 1.0](TEST-REPORT-1.0.md))_
@@ -11,7 +11,7 @@ Compiler source code: [ContinueAfterEndMethod.java](../src/test/resources/fluent
 Compiler source code: [PassThroughEndMethodNotMissing.java](../src/test/resources/fluent/api/PassThroughEndMethodNotMissing.java)
 ##### ![PASSED](icons8-passed-18.png) Compilation should pass when end method missing in assignment _([since 1.0](TEST-REPORT-1.0.md))_
 Compiler source code: [EndMethodMissingInAssignment.java](../src/test/resources/fluent/api/EndMethodMissingInAssignment.java)
-##### ![PASSED](icons8-passed-18.png) Compilation should pass when static method called on class with end method _(new in 1.11)_
+##### ![PASSED](icons8-passed-18.png) Compilation should pass when static method called on class with end method _([since 1.11](TEST-REPORT-1.11.md))_
 Compiler source code: [StaticMethodCalledOnClassWithEndMethod.java](../src/test/resources/fluent/api/StaticMethodCalledOnClassWithEndMethod.java)
 ##### ![PASSED](icons8-passed-18.png) Compilation should pass when end method check ignored _([since 1.0](TEST-REPORT-1.0.md))_
 Compiler source code: [EndMethodCheckIgnored.java](../src/test/resources/fluent/api/EndMethodCheckIgnored.java)
@@ -59,11 +59,5 @@ Compiler source code: [EndMethodMissingInConsumerReference.java](../src/test/res
 Compiler source code: [EndMethodMissingInConsumerConstructor.java](../src/test/resources/fluent/api/EndMethodMissingInConsumerConstructor.java)
 ##### ![PASSED](icons8-passed-18.png) Compilation should fail when chain starts with this _([since 1.9](TEST-REPORT-1.9.md))_
 Compiler source code: [ChainStartsWithThis.java](../src/test/resources/fluent/api/ChainStartsWithThis.java)
-##### ![PASSED](icons8-passed-18.png) Compilation should fail with custom error end method with custom error missing _(new in 1.11)_
+##### ![PASSED](icons8-passed-18.png) Compilation should fail with custom error end method with custom error missing _([since 1.11](TEST-REPORT-1.11.md))_
 Compiler source code: [EndMethodWithCustomErrorMissing.java](../src/test/resources/fluent/api/EndMethodWithCustomErrorMissing.java)
-##### ![PASSED](icons8-passed-18.png) End method check file should pass end method check file with unique name _([since 1.10](TEST-REPORT-1.10.md))_
-Compiler source code: [EndMethodCheckFileWithUniqueName.java](../src/test/resources/fluent/api/EndMethodCheckFileWithUniqueName.java)
-##### ![PASSED](icons8-passed-18.png) End method check file should throw illegal argument exception end method check file with duplicate name _([since 1.10](TEST-REPORT-1.10.md))_
-Compiler source code: [EndMethodCheckFileWithDuplicateName.java](../src/test/resources/fluent/api/EndMethodCheckFileWithDuplicateName.java)
-##### ![PASSED](icons8-passed-18.png) End method check file should throw assertion error no end method check file _([since 1.10](TEST-REPORT-1.10.md))_
-Compiler source code: [NoEndMethodCheckFile.java](../src/test/resources/fluent/api/NoEndMethodCheckFile.java)

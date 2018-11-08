@@ -103,4 +103,28 @@ public class EndProcessorTest {
         }
     }
 
+
+    @DataProvider
+    public static Object[][] sourceFilesWithCustomError() {
+        return new Object[][]{
+                {"Custom error", "EndMethodWithCustomErrorMissing", since(1.11)}
+        };
+    }
+
+    @Test(dataProvider = "sourceFilesWithCustomError")
+    public void compilationShouldFailWith(String expected, String className, Version since) throws URISyntaxException {
+        DiagnosticCollector<JavaFileObject> listener = new DiagnosticCollector<>();
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+        Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjects(new File(getClass().getResource(className + ".java").toURI()));
+        JavaCompiler.CompilationTask task = compiler.getTask(new StringWriter(), fileManager, listener, emptyList(), null, fileObjects);
+        boolean result = task.call();
+        List<Diagnostic<? extends JavaFileObject>> diagnostics = listener.getDiagnostics();
+        if (!diagnostics.isEmpty()) {
+            System.out.println(diagnostics);
+        }
+        Assert.assertFalse(result);
+        Assert.assertTrue(diagnostics.toString().contains(expected));
+    }
+
 }
