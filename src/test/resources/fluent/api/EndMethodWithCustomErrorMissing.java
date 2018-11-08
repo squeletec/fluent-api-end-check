@@ -29,19 +29,12 @@
 
 package fluent.api;
 
-import java.lang.annotation.*;
+import fluent.api.Dsl;
 
-/**
- * Annotation is marking terminal methods - methods, that need to be invoked in order to make sure, that some action
- * is performed.
- * Typically if we have a builder pattern, which is not actually returning it's result, it's simple to forget the
- * terminal method, and not have the things done.
- *
- * Example of such method - save(), verify(), etc.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-@Documented
-public @interface End {
-    String message() default "";
+public class EndMethodWithCustomErrorMissing {
+
+	public void method(DslWithCustomError dsl) {
+		dsl.add();
+	}
+
 }

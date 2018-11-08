@@ -60,6 +60,7 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	private final Trees trees;
 	private final Types types;
 	private final StartScanner startScanner = new StartScanner();
+	private String lastErrorMessage = "";
 
 	EndScanner(Map<String, Set<String>> endMethodsCache, Trees trees, Types types) {
 		this.endMethodsCache = endMethodsCache;
@@ -89,9 +90,9 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	}
 
 	private String message(Collection<String> m) {
-		return "Method chain must end with " + (m.size() > 1
-				? "one of the following methods: "
-				: "the method: ") + m;
+		return lastErrorMessage.length() > 0
+				? lastErrorMessage
+				: "Method chain must end with " + (m.size() > 1 ? "one of the following methods: " : "the method: ") + m;
 	}
 
 	private void inspectExpression(ExpressionTree expression, Tree statement) {
@@ -153,14 +154,21 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	}
 
 	private Set<String> getMethods(Element element) {
-		Set<String> methods = element.getEnclosedElements().stream().filter(EndScanner::isAnnotatedEndMethod).map(Object::toString).collect(toSet());
+		Set<String> methods = element.getEnclosedElements().stream().filter(this::isAnnotatedEndMethod).map(Object::toString).collect(toSet());
 		types.directSupertypes(element.asType()).forEach(type -> methods.addAll(getMethods(type)));
 		// Let's save some memory on set instances. All classes without any ending methods share one instance.
 		return methods.isEmpty() ? emptySet() : methods;
 	}
 
-	private static boolean isAnnotatedEndMethod(Element method) {
-		return nonNull(method.getAnnotation(End.class));
+	private boolean isAnnotatedEndMethod(Element method) {
+		End end = method.getAnnotation(End.class);
+		if(isNull(end)) {
+			return false;
+		}
+		if(end.message().length() > 0) {
+			lastErrorMessage = end.message();
+		}
+		return true;
 	}
 
 	private static boolean isConstructor(Element method) {
