@@ -1,4 +1,4 @@
-## Fluent API sentence end check. 1.12-SNAPSHOT
+## Fluent API sentence end check. 1.11
 #### Test results
 Thu, 8 Nov 2018 23:50:02 +0100
 
