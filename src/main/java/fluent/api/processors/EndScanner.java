@@ -167,6 +167,10 @@ class EndScanner extends TreePathScanner<Void, Void> {
 		return method.getKind() == CONSTRUCTOR;
 	}
 
+	private static boolean isStaticMethod(Element method) {
+		return method.getModifiers().contains(Modifier.STATIC);
+	}
+
 	private boolean isExternalEndMethod(Element method) {
 		return endMethodsCache.getOrDefault(method.getEnclosingElement().toString(), emptySet()).contains(method.toString());
 	}
@@ -224,7 +228,7 @@ class EndScanner extends TreePathScanner<Void, Void> {
 			 * 3. If method is found in cache (and still not annotated with @End), that means, that it was marked in
 			 *    external source as ending method, so it fulfills the requirement for sentence ending.
 			 */
-			if(isConstructor(method) || isAnnotatedEndMethod(method) || isExternalEndMethod(method)) {
+			if(isConstructor(method) || isStaticMethod(method) || isAnnotatedEndMethod(method) || isExternalEndMethod(method)) {
 				return true;
 			}
 			// Only drill down if we didn't encounter an ending method.

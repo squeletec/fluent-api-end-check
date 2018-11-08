@@ -76,4 +76,8 @@ public class Dsl {
         return null;
     }
 
+    public static void accept(Dsl dsl) {
+
+    }
+
 }

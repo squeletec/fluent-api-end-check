@@ -57,6 +57,7 @@ public class EndProcessorTest {
                 {PassWhen, "ContinueAfterEndMethod", since(1.8)},
                 {PassWhen, "PassThroughEndMethodNotMissing", since(1.1)},
                 {PassWhen, "EndMethodMissingInAssignment", since(1.0)},
+                {PassWhen, "StaticMethodCalledOnClassWithEndMethod", since(1.11)},
                 {PassWhen, "EndMethodCheckIgnored", since(1.0)},
                 {PassWhen, "EndMethodNotMissingInNesting", since(1.1)},
                 {PassWhen, "NestedEndMethodNotMissing", since(1.1)},
