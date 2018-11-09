@@ -73,6 +73,7 @@ public class EndProcessorTest {
                 {FailWhen, "ImmediateEndMethodMissingAfterConstructor", since(1.4)},
                 {FailWhen, "EndMethodMissing", since(1.0)},
                 {FailWhen, "EndMethodMissingInNesting", since(1.1)},
+                {FailWhen, "EndMethodMissingAfterStaticMethod", since(1.12)},
                 {FailWhen, "UnmarkedEndMethod", since(1.1)},
                 {FailWhen, "NestedEndMethodMissing", since(1.1)},
                 {FailWhen, "ExternalEndMethodMissing", since(1.2)},

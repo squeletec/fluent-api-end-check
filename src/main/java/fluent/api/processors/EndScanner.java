@@ -184,6 +184,45 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	}
 
 
+	/**
+	 * This scanner is drilling down the chain of method calls (fluent API sentence), to identify all points in the chain,
+	 * that may require some ending method.
+	 */
+	private class StartScanner extends TreeScanner<Boolean, Set<String>> {
+
+		@Override public Boolean visitMethodInvocation(MethodInvocationTree tree, Set<String> methods) {
+			Element method = element(tree);
+			/*
+			 * 1. If the method element represents constructor, which is invoked as method (method invocation), then it
+			 *    refers to call of super() or this(), which needs to be excluded from the check. Standard usage of
+			 *    constructor within "new Object();" is represented by "new class" and not "method invocation".
+			 *
+			 * 2. If method is annotated with @End annotation, it fulfills the requirement for sentence ending.
+			 *
+			 * 3. If method is found in cache (and still not annotated with @End), that means, that it was marked in
+			 *    external source as ending method, so it fulfills the requirement for sentence ending.
+			 */
+			if(isAnnotatedEndMethod(method) || isExternalEndMethod(method)) {
+				return true;
+			}
+			if(!(isConstructor(method) || isStaticMethod(method))) {
+				// Only drill down if we didn't encounter an ending method.
+				tree.getMethodSelect().accept(this, methods);
+			}
+			return methods.isEmpty();
+		}
+
+		@Override public Boolean visitMemberSelect(MemberSelectTree tree, Set<String> methods) {
+			// First drill down further.
+			tree.getExpression().accept(this, methods);
+			// Now get required methods for the type, to which the expression evaluates, on which we select the method.
+			methods.addAll(getMethods(tree.getExpression()));
+			return methods.isEmpty();
+		}
+
+	}
+
+
 	private static class VoidLambdaDetector implements ElementVisitor<Boolean, Void> {
 		@Override public Boolean visit(Element e, Void o) {
 			return false;
@@ -218,41 +257,6 @@ class EndScanner extends TreePathScanner<Void, Void> {
 		}
 	}
 
-	/**
-	 * This scanner is drilling down the chain of method calls (fluent API sentence), to identify all points in the chain,
-	 * that may require some ending method.
-	 */
-	private class StartScanner extends TreeScanner<Boolean, Set<String>> {
-
-		@Override public Boolean visitMethodInvocation(MethodInvocationTree tree, Set<String> methods) {
-			Element method = element(tree);
-			/*
-			 * 1. If the method element represents constructor, which is invoked as method (method invocation), then it
-			 *    refers to call of super() or this(), which needs to be excluded from the check. Standard usage of
-			 *    constructor within "new Object();" is represented by "new class" and not "method invocation".
-			 *
-			 * 2. If method is annotated with @End annotation, it fulfills the requirement for sentence ending.
-			 *
-			 * 3. If method is found in cache (and still not annotated with @End), that means, that it was marked in
-			 *    external source as ending method, so it fulfills the requirement for sentence ending.
-			 */
-			if(isConstructor(method) || isStaticMethod(method) || isAnnotatedEndMethod(method) || isExternalEndMethod(method)) {
-				return true;
-			}
-			// Only drill down if we didn't encounter an ending method.
-			tree.getMethodSelect().accept(this, methods);
-			return methods.isEmpty();
-		}
-
-		@Override public Boolean visitMemberSelect(MemberSelectTree tree, Set<String> methods) {
-			// First drill down further.
-			tree.getExpression().accept(this, methods);
-			// Now get required methods for the type, to which the expression evaluates, on which we select the method.
-			methods.addAll(getMethods(tree.getExpression()));
-			return methods.isEmpty();
-		}
-
-	}
 
 	private class MissingRequiredMethodReferenceDetector implements ElementVisitor<Boolean, Object> {
 		private final Set<String> methods;
