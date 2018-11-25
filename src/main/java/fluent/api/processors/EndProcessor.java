@@ -37,7 +37,6 @@ import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -50,7 +49,6 @@ import java.util.Enumeration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-import static com.sun.source.util.TaskEvent.Kind.ANALYZE;
 import static java.lang.ClassLoader.getSystemResources;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.joining;
@@ -66,24 +64,14 @@ import static javax.tools.StandardLocation.SOURCE_OUTPUT;
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class EndProcessor extends AbstractProcessor {
 
-	private static final String resources = "fluent-api-check-methods.txt";
+	private static final String EXTERNAL_END_METHOD_FILE = "fluent-api-check-methods.txt";
 
 	@Override
 	public synchronized void init(ProcessingEnvironment env) {
 		super.init(env);
-		JavacTask.instance(env).addTaskListener(new TaskListener() {
-			private EndScanner scanner = new EndScanner(loadEndMethodsFromFiles(), Trees.instance(env), env.getTypeUtils());
-
-			@Override public void started(TaskEvent taskEvent) { }
-
-			@Override public void finished(TaskEvent taskEvent) {
-				if(taskEvent.getKind() == ANALYZE) try {
-					scanner.scan(taskEvent.getCompilationUnit(), null);
-				} catch (RuntimeException runtimeException) {
-					env.getMessager().printMessage(Diagnostic.Kind.WARNING, "Unable to finish @End method check: " + runtimeException, taskEvent.getTypeElement());
-				}
-			}
-		});
+		EndScanner endScanner = new EndScanner(loadEndMethodsFromFiles(), Trees.instance(env), env.getTypeUtils());
+		EndCheckTaskListener endCheckTaskListener = new EndCheckTaskListener(env.getMessager(), endScanner);
+		JavacTask.instance(env).addTaskListener(endCheckTaskListener);
 	}
 
 	@Override
@@ -95,7 +83,6 @@ public class EndProcessor extends AbstractProcessor {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
 		});
 		return false;
 	}
@@ -103,7 +90,7 @@ public class EndProcessor extends AbstractProcessor {
 	private Map<String, Set<String>> loadEndMethodsFromFiles() {
 		Map<String, Set<String>> map = new ConcurrentHashMap<>();
 		try {
-			Enumeration<URL> endingMethodResources = getSystemResources(resources);
+			Enumeration<URL> endingMethodResources = getSystemResources(EXTERNAL_END_METHOD_FILE);
 			while(endingMethodResources.hasMoreElements()) {
 				URL url = endingMethodResources.nextElement();
 				try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {

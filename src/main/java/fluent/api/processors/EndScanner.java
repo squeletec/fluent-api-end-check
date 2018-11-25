@@ -31,7 +31,6 @@ package fluent.api.processors;
 
 import com.sun.source.tree.*;
 import com.sun.source.util.TreePathScanner;
-import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
 import fluent.api.End;
 import fluent.api.IgnoreMissingEndMethod;
@@ -42,7 +41,6 @@ import javax.lang.model.util.Types;
 import java.util.*;
 
 import static com.sun.source.tree.Tree.Kind.ASSIGNMENT;
-import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -54,12 +52,11 @@ import static javax.tools.Diagnostic.Kind.ERROR;
  * Compiler plugin scanning the source code for expression, which are supposed to be terminated by special terminal
  * methods (annotated with @End annotation), but were not.
  */
-class EndScanner extends TreePathScanner<Void, Void> {
+class EndScanner extends TreePathScanner<Void, Set<String>> {
 
 	private final Map<String, Set<String>> endMethodsCache;
 	private final Trees trees;
 	private final Types types;
-	private final StartScanner startScanner = new StartScanner();
 	private String lastErrorMessage = "";
 
 	EndScanner(Map<String, Set<String>> endMethodsCache, Trees trees, Types types) {
@@ -95,23 +92,60 @@ class EndScanner extends TreePathScanner<Void, Void> {
 				: "Method chain must end with " + (m.size() > 1 ? "one of the following methods: " : "the method: ") + m;
 	}
 
-	private void inspectExpression(ExpressionTree expression, Tree statement) {
-		if (expression.getKind() != ASSIGNMENT) {
-			Element element = element(expression);
-			if (nonNull(element)) {
-				Set<String> methods = new HashSet<>(getMethods(expression));
-				Boolean hasEnd = expression.accept(startScanner, methods);
-				if (!(TRUE.equals(hasEnd) || methods.isEmpty())) {
-					trees.printMessage(ERROR, message(methods), statement, getCurrentPath().getCompilationUnit());
-				}
+	private Void visitExpression(ExpressionTree tree, Tree statement) {
+		if(tree.getKind() == ASSIGNMENT) {
+			return tree.accept(this, null);
+		} else {
+			Set<String> endMethods = new HashSet<>(getMethods(tree));
+			tree.accept(this, endMethods);
+			if (!endMethods.isEmpty()) {
+				trees.printMessage(ERROR, message(endMethods), statement, getCurrentPath().getCompilationUnit());
 			}
+			return null;
 		}
 	}
 
 	@Override
-	public Void visitExpressionStatement(ExpressionStatementTree statement, Void aVoid) {
-		inspectExpression(statement.getExpression(), statement);
-		return statement.getExpression().accept(this, aVoid);
+	public Void visitExpressionStatement(ExpressionStatementTree statement, Set<String> endMethods) {
+		return visitExpression(statement.getExpression(), statement);
+	}
+
+	@Override
+	public Void visitMethodInvocation(MethodInvocationTree tree, Set<String> endMethods) {
+		tree.getArguments().forEach(argument -> argument.accept(this, null));
+		if(endMethods == null) {
+			return tree.getMethodSelect().accept(this, null);
+		}
+		/*
+		 * 1. If the method element represents constructor, which is invoked as method (method invocation), then it
+		 *    refers to call of super() or this(), which needs to be excluded from the check. Standard usage of
+		 *    constructor within "new Object();" is represented by "new class" and not "method invocation".
+		 *
+		 * 2. If method is annotated with @End annotation, it fulfills the requirement for sentence ending.
+		 *
+		 * 3. If method is found in cache (and still not annotated with @End), that means, that it was marked in
+		 *    external source as ending method, so it fulfills the requirement for sentence ending.
+		 */
+		Element method = element(tree);
+		if(isAnnotatedEndMethod(method) || isExternalEndMethod(method)) {
+			endMethods.clear();
+			return tree.getMethodSelect().accept(this, null);
+		} else {
+			endMethods.addAll(getMethods(tree));
+			return tree.getMethodSelect().accept(this, isConstructor(method) || isStaticMethod(method) ? null : endMethods);
+		}
+	}
+
+	@Override
+	public Void visitMemberSelect(MemberSelectTree tree, Set<String> endMethods) {
+		if(endMethods == null) {
+			return super.visitMemberSelect(tree, null);
+		}
+		// First drill down further.
+		tree.getExpression().accept(this, endMethods);
+		// Now get required methods for the type, to which the expression evaluates, on which we select the method.
+		endMethods.addAll(getMethods(tree.getExpression()));
+		return null;
 	}
 
 	private boolean isVoidLambda(Tree tree) {
@@ -119,25 +153,26 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	}
 
 	@Override
-	public Void visitLambdaExpression(LambdaExpressionTree tree, Void aVoid) {
+	public Void visitLambdaExpression(LambdaExpressionTree tree, Set<String> endMethods) {
 		if(tree.getBodyKind() == LambdaExpressionTree.BodyKind.EXPRESSION && isVoidLambda(tree)) {
-			inspectExpression((ExpressionTree) tree.getBody(), tree);
+			return visitExpression((ExpressionTree) tree.getBody(), tree);
+		} else {
+			return tree.getBody().accept(this, null);
 		}
-		return tree.getBody().accept(this, aVoid);
 	}
 
 	@Override
-	public Void visitMemberReference(MemberReferenceTree tree, Void aVoid) {
+	public Void visitMemberReference(MemberReferenceTree tree, Set<String> endMethods) {
 		if(isVoidLambda(tree)) {
 			ExpressionTree expression = tree.getQualifierExpression();
 			Set<String> methods = new HashSet<>(getMethods(expression));
-			tree.accept(startScanner, methods);
+			visitExpression(tree.getQualifierExpression(), tree);
 			Element element = element(tree);
 			if(!element.accept(new MissingRequiredMethodReferenceDetector(methods), null)) {
 				trees.printMessage(ERROR, message(methods), tree, getCurrentPath().getCompilationUnit());
 			}
 		}
-		return tree.getQualifierExpression().accept(this, aVoid);
+		return tree.getQualifierExpression().accept(this, endMethods);
 	}
 
 	private Element element(Tree tree) {
@@ -149,8 +184,8 @@ class EndScanner extends TreePathScanner<Void, Void> {
 	}
 
 	@Override
-	public Void visitMethod(MethodTree methodTree, Void aVoid) {
-		return ignoreCheck(methodTree) ? aVoid : super.visitMethod(methodTree, aVoid);
+	public Void visitMethod(MethodTree methodTree, Set<String> endMethods) {
+		return ignoreCheck(methodTree) ? null : super.visitMethod(methodTree, endMethods);
 	}
 
 	private Set<String> getMethods(Element element) {
@@ -181,45 +216,6 @@ class EndScanner extends TreePathScanner<Void, Void> {
 
 	private boolean isExternalEndMethod(Element method) {
 		return endMethodsCache.getOrDefault(method.getEnclosingElement().toString(), emptySet()).contains(method.toString());
-	}
-
-
-	/**
-	 * This scanner is drilling down the chain of method calls (fluent API sentence), to identify all points in the chain,
-	 * that may require some ending method.
-	 */
-	private class StartScanner extends TreeScanner<Boolean, Set<String>> {
-
-		@Override public Boolean visitMethodInvocation(MethodInvocationTree tree, Set<String> methods) {
-			Element method = element(tree);
-			/*
-			 * 1. If the method element represents constructor, which is invoked as method (method invocation), then it
-			 *    refers to call of super() or this(), which needs to be excluded from the check. Standard usage of
-			 *    constructor within "new Object();" is represented by "new class" and not "method invocation".
-			 *
-			 * 2. If method is annotated with @End annotation, it fulfills the requirement for sentence ending.
-			 *
-			 * 3. If method is found in cache (and still not annotated with @End), that means, that it was marked in
-			 *    external source as ending method, so it fulfills the requirement for sentence ending.
-			 */
-			if(isAnnotatedEndMethod(method) || isExternalEndMethod(method)) {
-				return true;
-			}
-			if(!(isConstructor(method) || isStaticMethod(method))) {
-				// Only drill down if we didn't encounter an ending method.
-				tree.getMethodSelect().accept(this, methods);
-			}
-			return methods.isEmpty();
-		}
-
-		@Override public Boolean visitMemberSelect(MemberSelectTree tree, Set<String> methods) {
-			// First drill down further.
-			tree.getExpression().accept(this, methods);
-			// Now get required methods for the type, to which the expression evaluates, on which we select the method.
-			methods.addAll(getMethods(tree.getExpression()));
-			return methods.isEmpty();
-		}
-
 	}
 
 
