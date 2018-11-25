@@ -46,6 +46,7 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
+import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
 /**
@@ -149,7 +150,8 @@ class EndScanner extends TreePathScanner<Void, Set<String>> {
 	}
 
 	private boolean isVoidLambda(Tree tree) {
-		return types.asElement(trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree))).getEnclosedElements().stream().anyMatch(m -> m.accept(new VoidLambdaDetector(), null));
+		ExecutableElementTest<Void> test = new ExecutableElementTest<>((e, o) -> !e.isDefault() && !e.getModifiers().contains(STATIC) && "void".equals(e.getReturnType().toString()));
+		return types.asElement(trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree))).getEnclosedElements().stream().anyMatch(m -> m.accept(test, null));
 	}
 
 	@Override
@@ -168,7 +170,7 @@ class EndScanner extends TreePathScanner<Void, Set<String>> {
 			Set<String> methods = new HashSet<>(getMethods(expression));
 			visitExpression(tree.getQualifierExpression(), tree);
 			Element element = element(tree);
-			if(!element.accept(new MissingRequiredMethodReferenceDetector(methods), null)) {
+			if(element.accept(new ExecutableElementTest<>(this::isMethodReferenceEndMethodMissing), methods)) {
 				trees.printMessage(ERROR, message(methods), tree, getCurrentPath().getCompilationUnit());
 			}
 		}
@@ -211,91 +213,20 @@ class EndScanner extends TreePathScanner<Void, Set<String>> {
 	}
 
 	private static boolean isStaticMethod(Element method) {
-		return method.getModifiers().contains(Modifier.STATIC);
+		return method.getModifiers().contains(STATIC);
 	}
 
 	private boolean isExternalEndMethod(Element method) {
 		return endMethodsCache.getOrDefault(method.getEnclosingElement().toString(), emptySet()).contains(method.toString());
 	}
 
-
-	private static class VoidLambdaDetector implements ElementVisitor<Boolean, Void> {
-		@Override public Boolean visit(Element e, Void o) {
-			return false;
+	private boolean isMethodReferenceEndMethodMissing(ExecutableElement e, Set<String> methods) {
+		if(isAnnotatedEndMethod(e)) {
+			return true;
 		}
-
-		@Override public Boolean visit(Element e) {
-			return false;
-		}
-
-		@Override public Boolean visitPackage(PackageElement e, Void o) {
-			return false;
-		}
-
-		@Override public Boolean visitType(TypeElement e, Void o) {
-			return false;
-		}
-
-		@Override public Boolean visitVariable(VariableElement e, Void o) {
-			return false;
-		}
-
-		@Override public Boolean visitExecutable(ExecutableElement e, Void o) {
-			return !e.isDefault() && !e.getModifiers().contains(Modifier.STATIC) && "void".equals(e.getReturnType().toString());
-		}
-
-		@Override public Boolean visitTypeParameter(TypeParameterElement e, Void o) {
-			return false;
-		}
-
-		@Override public Boolean visitUnknown(Element e, Void o) {
-			return false;
-		}
+		Element returnType = e.getKind() == CONSTRUCTOR ? e.getEnclosingElement() : types.asElement(e.getReturnType());
+		methods.addAll(getMethods(returnType));
+		return !methods.isEmpty();
 	}
 
-
-	private class MissingRequiredMethodReferenceDetector implements ElementVisitor<Boolean, Object> {
-		private final Set<String> methods;
-
-		private MissingRequiredMethodReferenceDetector(Set<String> methods) {
-			this.methods = methods;
-		}
-
-		@Override public Boolean visit(Element e, Object o) {
-			return true;
-		}
-
-		@Override public Boolean visit(Element e) {
-			return true;
-		}
-
-		@Override public Boolean visitPackage(PackageElement e, Object o) {
-			return true;
-		}
-
-		@Override public Boolean visitType(TypeElement e, Object o) {
-			return true;
-		}
-
-		@Override public Boolean visitVariable(VariableElement e, Object o) {
-			return true;
-		}
-
-		@Override public Boolean visitExecutable(ExecutableElement e, Object o) {
-			if(isAnnotatedEndMethod(e)) {
-				return true;
-			}
-			Element returnType = e.getKind() == CONSTRUCTOR ? e.getEnclosingElement() : types.asElement(e.getReturnType());
-			methods.addAll(getMethods(returnType));
-			return methods.isEmpty();
-		}
-
-		@Override public Boolean visitTypeParameter(TypeParameterElement e, Object o) {
-			return true;
-		}
-
-		@Override public Boolean visitUnknown(Element e, Object o) {
-			return true;
-		}
-	}
 }
