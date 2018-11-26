@@ -27,38 +27,14 @@
  *
  */
 
-package fluent.api.processors;
+package fluent.api;
 
-import com.sun.source.util.TaskEvent;
-import com.sun.source.util.TaskListener;
+import fluent.api.Dsl;
 
-import javax.annotation.processing.Messager;
+public class EndMethodMissingAfterPassThroughMethod {
 
-import static com.sun.source.util.TaskEvent.Kind.ANALYZE;
-import static javax.tools.Diagnostic.Kind.WARNING;
-
-class EndCheckTaskListener implements TaskListener {
-
-    private final Messager messager;
-    private final EndScanner scanner;
-
-    EndCheckTaskListener(Messager messager, EndScanner scanner) {
-        this.messager = messager;
-        this.scanner = scanner;
-    }
-
-    @Override
-    public void started(TaskEvent taskEvent) {
-        // Nothing to do on task started event.
-    }
-
-    @Override
-    public void finished(TaskEvent taskEvent) {
-        if(taskEvent.getKind() == ANALYZE) try {
-            scanner.scan(taskEvent.getCompilationUnit(), null);
-        } catch (RuntimeException runtimeException) {
-            messager.printMessage(WARNING, "Unable to finish @End method check: " + runtimeException, taskEvent.getTypeElement());
-        }
-    }
+	public void method(Dsl dsl) {
+		dsl.add().cancel().add();
+	}
 
 }

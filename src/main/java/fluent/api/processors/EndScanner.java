@@ -30,6 +30,8 @@
 package fluent.api.processors;
 
 import com.sun.source.tree.*;
+import com.sun.source.util.TaskEvent;
+import com.sun.source.util.TaskListener;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 import fluent.api.End;
@@ -41,6 +43,7 @@ import javax.lang.model.util.Types;
 import java.util.*;
 
 import static com.sun.source.tree.Tree.Kind.ASSIGNMENT;
+import static com.sun.source.util.TaskEvent.Kind.ANALYZE;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -48,12 +51,13 @@ import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind.ERROR;
+import static javax.tools.Diagnostic.Kind.WARNING;
 
 /**
  * Compiler plugin scanning the source code for expression, which are supposed to be terminated by special terminal
  * methods (annotated with @End annotation), but were not.
  */
-class EndScanner extends TreePathScanner<Void, Set<String>> {
+class EndScanner extends TreePathScanner<Void, Set<String>> implements TaskListener {
 
 	private final Map<String, Set<String>> endMethodsCache;
 	private final Trees trees;
@@ -227,6 +231,20 @@ class EndScanner extends TreePathScanner<Void, Set<String>> {
 		Element returnType = e.getKind() == CONSTRUCTOR ? e.getEnclosingElement() : types.asElement(e.getReturnType());
 		methods.addAll(getMethods(returnType));
 		return !methods.isEmpty();
+	}
+
+	@Override
+	public void started(TaskEvent taskEvent) {
+		// Nothing to do on task started event.
+	}
+
+	@Override
+	public void finished(TaskEvent taskEvent) {
+		if(taskEvent.getKind() == ANALYZE) try {
+			scan(taskEvent.getCompilationUnit(), null);
+		} catch (RuntimeException runtimeException) {
+			trees.printMessage(WARNING, "Unable to finish @End method check: " + runtimeException, taskEvent.getCompilationUnit(), getCurrentPath().getCompilationUnit());
+		}
 	}
 
 }

@@ -70,8 +70,7 @@ public class EndProcessor extends AbstractProcessor {
 	public synchronized void init(ProcessingEnvironment env) {
 		super.init(env);
 		EndScanner endScanner = new EndScanner(loadEndMethodsFromFiles(), Trees.instance(env), env.getTypeUtils());
-		EndCheckTaskListener endCheckTaskListener = new EndCheckTaskListener(env.getMessager(), endScanner);
-		JavacTask.instance(env).addTaskListener(endCheckTaskListener);
+		JavacTask.instance(env).addTaskListener(endScanner);
 	}
 
 	@Override

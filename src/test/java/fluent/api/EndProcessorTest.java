@@ -82,7 +82,8 @@ public class EndProcessorTest {
                 {FailWhen, "EndMethodMissingInConsumerExpression", since(1.8)},
                 {FailWhen, "EndMethodMissingInConsumerReference", since(1.8)},
                 {FailWhen, "EndMethodMissingInConsumerConstructor", since(1.8)},
-                {FailWhen, "ChainStartsWithThis", since(1.9)}
+                {FailWhen, "ChainStartsWithThis", since(1.9)},
+                {FailWhen, "EndMethodMissingAfterPassThroughMethod", since(1.13)}
         };
     }
 
