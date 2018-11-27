@@ -283,6 +283,24 @@ Such test will fail if
 
 ## Release notes
 
+#### Version 1.14 (November 27th 2018)
+- Fixed issue with missed externally defined end method in method reference.
+
+[Test evidence for 1.14](reports/TEST-REPORT-1.14.md)
+
+#### Version 1.13 (November 26th 2018)
+- Simplified implementation.
+- No separate scanner for end method collecting. It's now responsibility of `EndScanner`.
+- Visitors testing void lambda, and member reference merged and parametrized.
+- `EndScanner` now implements TaskListener, so no extra class needed.
+
+[Test evidence for 1.13](reports/TEST-REPORT-1.13.md)
+
+#### Version 1.12 (November 9th 2018)
+- Fixed issue introduced on static method analysis
+
+[Test evidence for 1.12](reports/TEST-REPORT-1.12.md)
+
 #### Version 1.11 (November 8th 2018)
 - Fixed compilation failure when qualified static method called on class, which contains `@End` annotated method.
 - Added optional parameter of the annotation to specify custom error message.
