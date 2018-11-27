@@ -66,6 +66,7 @@ public class EndProcessorTest {
                 {PassWhen, "ExternalGenericEndMethodWithParameterNotMissing", since(1.3)},
                 {PassWhen, "ExternalGenericEndMethodWithGenericParameterNotMissing", since(1.3)},
                 {PassWhen, "EndMethodNotMissingInConsumerExpression", since(1.8)},
+                {PassWhen, "ExternalEndMethodNotMissingInConsumerReference", since(1.14)},
                 {PassWhen, "EndMethodMissingInFunctionExpression", since(1.8)},
                 {PassWhen, "IgnoreEndMethodOnThis", since(1.9)},
 
@@ -81,6 +82,7 @@ public class EndProcessorTest {
                 {FailWhen, "ImmediateEndMethodMissingAfterAnonymousClass", since(1.6)},
                 {FailWhen, "EndMethodMissingInConsumerExpression", since(1.8)},
                 {FailWhen, "EndMethodMissingInConsumerReference", since(1.8)},
+                {FailWhen, "ExternalEndMethodMissingInConsumerReference", since(1.14)},
                 {FailWhen, "EndMethodMissingInConsumerConstructor", since(1.8)},
                 {FailWhen, "ChainStartsWithThis", since(1.9)},
                 {FailWhen, "EndMethodMissingAfterPassThroughMethod", since(1.13)}

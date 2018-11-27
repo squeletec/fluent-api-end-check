@@ -42,6 +42,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.*;
 
+import static com.sun.source.tree.LambdaExpressionTree.BodyKind.EXPRESSION;
 import static com.sun.source.tree.Tree.Kind.ASSIGNMENT;
 import static com.sun.source.util.TaskEvent.Kind.ANALYZE;
 import static java.util.Collections.emptySet;
@@ -62,7 +63,7 @@ class EndScanner extends TreePathScanner<Void, Set<String>> implements TaskListe
 	private final Map<String, Set<String>> endMethodsCache;
 	private final Trees trees;
 	private final Types types;
-	private String lastErrorMessage = "";
+	private String lastError = "";
 
 	EndScanner(Map<String, Set<String>> endMethodsCache, Trees trees, Types types) {
 		this.endMethodsCache = endMethodsCache;
@@ -70,44 +71,23 @@ class EndScanner extends TreePathScanner<Void, Set<String>> implements TaskListe
 		this.types = types;
 	}
 
-	private Set<String> getMethods(Tree tree) {
-		if("this".equals(tree.toString())) {
-			return emptySet();
-		}
-		return getMethods(trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree)));
+	@Override
+	public void started(TaskEvent taskEvent) {
+		// Nothing to do on task started event.
 	}
 
-	private Set<String> getMethods(TypeMirror typeMirror) {
-		Element element = types.asElement(typeMirror);
-		if(isNull(element)) {
-			return emptySet();
-		} else {
-			String elementName = element.toString();
-			if(!endMethodsCache.containsKey(elementName)) {
-				Set<String> methods = getMethods(element);
-				endMethodsCache.put(elementName, methods);
-			}
-			return endMethodsCache.get(elementName);
+	@Override
+	public void finished(TaskEvent taskEvent) {
+		if(taskEvent.getKind() == ANALYZE) try {
+			scan(taskEvent.getCompilationUnit(), null);
+		} catch (RuntimeException runtimeException) {
+			trees.printMessage(WARNING, "Unable to finish @End method check: " + runtimeException, taskEvent.getCompilationUnit(), getCurrentPath().getCompilationUnit());
 		}
 	}
 
-	private String message(Collection<String> m) {
-		return lastErrorMessage.length() > 0
-				? lastErrorMessage
-				: "Method chain must end with " + (m.size() > 1 ? "one of the following methods: " : "the method: ") + m;
-	}
-
-	private Void visitExpression(ExpressionTree tree, Tree statement) {
-		if(tree.getKind() == ASSIGNMENT) {
-			return tree.accept(this, null);
-		} else {
-			Set<String> endMethods = new HashSet<>(getMethods(tree));
-			tree.accept(this, endMethods);
-			if (!endMethods.isEmpty()) {
-				trees.printMessage(ERROR, message(endMethods), statement, getCurrentPath().getCompilationUnit());
-			}
-			return null;
-		}
+	@Override
+	public Void visitMethod(MethodTree methodTree, Set<String> endMethods) {
+		return ignoreCheck(methodTree) ? null : super.visitMethod(methodTree, endMethods);
 	}
 
 	@Override
@@ -121,16 +101,6 @@ class EndScanner extends TreePathScanner<Void, Set<String>> implements TaskListe
 		if(endMethods == null) {
 			return tree.getMethodSelect().accept(this, null);
 		}
-		/*
-		 * 1. If the method element represents constructor, which is invoked as method (method invocation), then it
-		 *    refers to call of super() or this(), which needs to be excluded from the check. Standard usage of
-		 *    constructor within "new Object();" is represented by "new class" and not "method invocation".
-		 *
-		 * 2. If method is annotated with @End annotation, it fulfills the requirement for sentence ending.
-		 *
-		 * 3. If method is found in cache (and still not annotated with @End), that means, that it was marked in
-		 *    external source as ending method, so it fulfills the requirement for sentence ending.
-		 */
 		Element method = element(tree);
 		if(isAnnotatedEndMethod(method) || isExternalEndMethod(method)) {
 			endMethods.clear();
@@ -146,39 +116,64 @@ class EndScanner extends TreePathScanner<Void, Set<String>> implements TaskListe
 		if(endMethods == null) {
 			return super.visitMemberSelect(tree, null);
 		}
-		// First drill down further.
 		tree.getExpression().accept(this, endMethods);
-		// Now get required methods for the type, to which the expression evaluates, on which we select the method.
 		endMethods.addAll(getMethods(tree.getExpression()));
 		return null;
 	}
 
-	private boolean isVoidLambda(Tree tree) {
-		ExecutableElementTest<Void> test = new ExecutableElementTest<>((e, o) -> !e.isDefault() && !e.getModifiers().contains(STATIC) && "void".equals(e.getReturnType().toString()));
-		return types.asElement(trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree))).getEnclosedElements().stream().anyMatch(m -> m.accept(test, null));
-	}
-
 	@Override
 	public Void visitLambdaExpression(LambdaExpressionTree tree, Set<String> endMethods) {
-		if(tree.getBodyKind() == LambdaExpressionTree.BodyKind.EXPRESSION && isVoidLambda(tree)) {
+		if(tree.getBodyKind() == EXPRESSION && isVoidLambda(tree)) {
 			return visitExpression((ExpressionTree) tree.getBody(), tree);
 		} else {
-			return tree.getBody().accept(this, null);
+			return super.visitLambdaExpression(tree, null);
 		}
 	}
 
 	@Override
 	public Void visitMemberReference(MemberReferenceTree tree, Set<String> endMethods) {
+		ExpressionTree expression = tree.getQualifierExpression();
 		if(isVoidLambda(tree)) {
-			ExpressionTree expression = tree.getQualifierExpression();
 			Set<String> methods = new HashSet<>(getMethods(expression));
-			visitExpression(tree.getQualifierExpression(), tree);
-			Element element = element(tree);
-			if(element.accept(new ExecutableElementTest<>(this::isMethodReferenceEndMethodMissing), methods)) {
+			expression.accept(this, methods);
+			if(element(tree).accept(new ExecutableElementTest<>(this::isMethodReferenceEndMethodMissing), methods)) {
 				trees.printMessage(ERROR, message(methods), tree, getCurrentPath().getCompilationUnit());
 			}
+			return null;
+		} else {
+			return expression.accept(this, null);
 		}
-		return tree.getQualifierExpression().accept(this, endMethods);
+	}
+
+	private Void visitExpression(ExpressionTree tree, Tree statement) {
+		if(tree.getKind() == ASSIGNMENT) {
+			return tree.accept(this, null);
+		} else {
+			Set<String> endMethods = new HashSet<>(getMethods(tree));
+			tree.accept(this, endMethods);
+			if (!endMethods.isEmpty()) {
+				trees.printMessage(ERROR, message(endMethods), statement, getCurrentPath().getCompilationUnit());
+			}
+			return null;
+		}
+	}
+
+	private Set<String> getMethods(Tree tree) {
+		return "this".equals(tree.toString()) ? emptySet() : getMethods(trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree)));
+	}
+
+	private Set<String> getMethods(TypeMirror typeMirror) {
+		Element element = types.asElement(typeMirror);
+		return isNull(element) ? emptySet() : endMethodsCache.computeIfAbsent(element.toString(), elementName -> getMethods(element));
+	}
+
+	private String message(Collection<String> m) {
+		return lastError.isEmpty() ? "Method chain must end with " + (m.size() > 1 ? "one of the following methods: " : "method: ") + m : lastError;
+	}
+
+	private boolean isVoidLambda(Tree tree) {
+		ExecutableElementTest<Void> test = new ExecutableElementTest<>((e, o) -> !e.isDefault() && !e.getModifiers().contains(STATIC) && "void".equals(e.getReturnType().toString()));
+		return types.asElement(trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree))).getEnclosedElements().stream().anyMatch(m -> m.accept(test, null));
 	}
 
 	private Element element(Tree tree) {
@@ -189,15 +184,9 @@ class EndScanner extends TreePathScanner<Void, Set<String>> implements TaskListe
 		return nonNull(element(tree).getAnnotation(IgnoreMissingEndMethod.class));
 	}
 
-	@Override
-	public Void visitMethod(MethodTree methodTree, Set<String> endMethods) {
-		return ignoreCheck(methodTree) ? null : super.visitMethod(methodTree, endMethods);
-	}
-
 	private Set<String> getMethods(Element element) {
 		Set<String> methods = element.getEnclosedElements().stream().filter(this::isAnnotatedEndMethod).map(Object::toString).collect(toSet());
 		types.directSupertypes(element.asType()).forEach(type -> methods.addAll(getMethods(type)));
-		// Let's save some memory on set instances. All classes without any ending methods share one instance.
 		return methods.isEmpty() ? emptySet() : methods;
 	}
 
@@ -206,8 +195,8 @@ class EndScanner extends TreePathScanner<Void, Set<String>> implements TaskListe
 		if(isNull(end)) {
 			return false;
 		}
-		if(end.message().length() > 0) {
-			lastErrorMessage = end.message();
+		if(!end.message().isEmpty()) {
+			lastError = end.message();
 		}
 		return true;
 	}
@@ -225,26 +214,12 @@ class EndScanner extends TreePathScanner<Void, Set<String>> implements TaskListe
 	}
 
 	private boolean isMethodReferenceEndMethodMissing(ExecutableElement e, Set<String> methods) {
-		if(isAnnotatedEndMethod(e)) {
-			return true;
+		if(isAnnotatedEndMethod(e) || isExternalEndMethod(e)) {
+			return false;
 		}
 		Element returnType = e.getKind() == CONSTRUCTOR ? e.getEnclosingElement() : types.asElement(e.getReturnType());
 		methods.addAll(getMethods(returnType));
 		return !methods.isEmpty();
-	}
-
-	@Override
-	public void started(TaskEvent taskEvent) {
-		// Nothing to do on task started event.
-	}
-
-	@Override
-	public void finished(TaskEvent taskEvent) {
-		if(taskEvent.getKind() == ANALYZE) try {
-			scan(taskEvent.getCompilationUnit(), null);
-		} catch (RuntimeException runtimeException) {
-			trees.printMessage(WARNING, "Unable to finish @End method check: " + runtimeException, taskEvent.getCompilationUnit(), getCurrentPath().getCompilationUnit());
-		}
 	}
 
 }
