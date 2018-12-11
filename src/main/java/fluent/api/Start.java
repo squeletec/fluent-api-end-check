@@ -29,69 +29,19 @@
 
 package fluent.api;
 
+import java.lang.annotation.*;
+
 /**
- * Dsl interface allowing chaining of method add(), but with required terminal method end().
+ * Annotation is marking terminal methods - methods, that need to be invoked in order to make sure, that some action
+ * is performed.
+ * Typically if we have a builder pattern, which is not actually returning it's result, it's simple to forget the
+ * terminal method, and not have the things done.
+ *
+ * Example of such method - save(), verify(), etc.
  */
-public class Dsl {
-
-    /**
-     * Method allowing chaining.
-     *
-     * @return The DSL to continue chaining.
-     */
-    public Dsl add() {
-        return this;
-    }
-
-    /**
-     * Terminal method, that needs to be invoked at the end of the chain.
-     */
-    @End
-    public void end() {
-
-    }
-
-    /**
-     * Another terminal method, that needs to be invoked at the end of the chain.
-     */
-    @End
-    public Dsl cancel() {
-        return this;
-    }
-
-    public Nested nested() {
-        return null;
-    }
-
-    public void wrongEnd() {
-
-    }
-
-    public NestedAllowingEnd nestedAllowingEnd() {
-        return null;
-    }
-
-    @End
-    public Result result() {
-        return null;
-    }
-
-    public static void accept(Dsl dsl) {
-
-    }
-
-    @Start("Missing parameters.")
-    public static Parameter1 call() {
-        return null;
-    }
-
-    interface Parameter1 {
-        Parameter2 parameter1(int value);
-    }
-
-    interface Parameter2 {
-        @End
-        void parameter2(String value);
-    }
-
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Documented
+public @interface Start {
+    String value();
 }

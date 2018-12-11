@@ -48,7 +48,7 @@ import static java.util.Collections.emptyList;
 @Listeners(MarkdownReporter.class)
 public class EndProcessorTest {
 
-    enum Expectation {PassWhen, FailWhen;}
+    enum Expectation {PassWhen, FailWhen}
 
     @DataProvider
     public static Object[][] sourceFiles() {
@@ -69,6 +69,7 @@ public class EndProcessorTest {
                 {PassWhen, "ExternalEndMethodNotMissingInConsumerReference", since(1.14)},
                 {PassWhen, "EndMethodMissingInFunctionExpression", since(1.8)},
                 {PassWhen, "IgnoreEndMethodOnThis", since(1.9)},
+                {PassWhen, "EndMethodNotMissingInSequenceChain", since(1.15)},
 
                 {FailWhen, "ImmediateEndMethodMissing", since(1.3)},
                 {FailWhen, "ImmediateEndMethodMissingAfterConstructor", since(1.4)},
@@ -85,7 +86,8 @@ public class EndProcessorTest {
                 {FailWhen, "ExternalEndMethodMissingInConsumerReference", since(1.14)},
                 {FailWhen, "EndMethodMissingInConsumerConstructor", since(1.8)},
                 {FailWhen, "ChainStartsWithThis", since(1.9)},
-                {FailWhen, "EndMethodMissingAfterPassThroughMethod", since(1.13)}
+                {FailWhen, "EndMethodMissingAfterPassThroughMethod", since(1.13)},
+                {FailWhen, "EndMethodMissingInSequenceChain", since(1.15)}
         };
     }
 
@@ -111,7 +113,8 @@ public class EndProcessorTest {
     @DataProvider
     public static Object[][] sourceFilesWithCustomError() {
         return new Object[][]{
-                {"Custom error", "EndMethodWithCustomErrorMissing", since(1.11)}
+                {"Custom error", "EndMethodWithCustomErrorMissing", since(1.11)},
+                {"Missing parameters.", "EndMethodMissingInSequencePattern", since(1.15)}
         };
     }
 

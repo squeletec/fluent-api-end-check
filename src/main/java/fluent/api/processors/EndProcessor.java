@@ -37,6 +37,7 @@ import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Types;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -69,7 +70,9 @@ public class EndProcessor extends AbstractProcessor {
 	@Override
 	public synchronized void init(ProcessingEnvironment env) {
 		super.init(env);
-		EndScanner endScanner = new EndScanner(loadEndMethodsFromFiles(), Trees.instance(env), env.getTypeUtils());
+		Trees trees = Trees.instance(env);
+		Types types = env.getTypeUtils();
+		DslScanner endScanner = new DslScanner(new UnterminatedSentenceScanner(loadEndMethodsFromFiles(), trees, types), trees, types);
 		JavacTask.instance(env).addTaskListener(endScanner);
 	}
 
