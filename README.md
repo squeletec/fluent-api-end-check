@@ -332,6 +332,8 @@ Such test will fail if
 - Introduced `@Start` annotation used to mark beginning of a fluent sentence, that needs to finish with
   `@End` for use cases, where the sentence may be composed by chaining of different interfaces, some of them not containing the ending method.
 
+[Test evidence for 1.15](reports/TEST-REPORT-1.15.md)
+
 #### Version 1.14 (November 27th 2018)
 - Fixed issue with missed externally defined end method in method reference.
 
