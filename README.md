@@ -249,7 +249,52 @@ public class TestFluentApi {
 ```
 Without ignoring the end method check, this test method would throw compilation error.
 
-### 4. Detection of misconfiguration of the end check
+### 4. Fluent sentence end check for structured DSL - `@Start`
+Examples above covered rather simple DSL patterns like simple builder, or hierarchical builder with a need or option
+to end the sentence at any level, or require to get back to initial level.
+
+For those examples the trigger of the check in the sentence was point, where the expression (method return value)
+evaluated to type, which contains some end method and therefore only marking the `@End` method is sufficient.
+
+There are other DSL patterns, e.g. "named parameters" or other sequential invocation, where the sentence gets to states,
+where we need to make sure, that sentence must continue, but the terminal (`@End`) method is not yet reachable.
+
+Let's see an example of "named parameters":
+
+```java
+public interface Parameter1 {
+    Parameter2 parameter1(String value);
+}
+public interface Parameter2 {
+    Parameter3 parameter2(int value);
+}
+public interface Parameter3 {
+    @End
+    void parameter3(LocalDate value);
+}
+
+@Start("Parameter1, parameter2 and parameter3 need to be provided.")
+public static Parameter1 callWith() {
+    return parameter1 -> parameter2 -> parameter3 -> {};
+}
+
+public void test() {
+    callWith().parameter1("string").parameter2(5).parameter3(now());
+}
+```
+
+In the example above, we can see, that only the very final method `parameter3(LocalDate)` is the terminal `@End` method,
+which can terminate the chain. But this one is not available on any other interface, than `Parameter3`. So the check
+wouldn't be triggered until `Parameter3` interface is hit, and chain terminated with `callWith()` or `parameter1(String)`
+would pass the compilation, which is miss of the terminal method.
+
+For that in version 1.15, additional annotation `@Start` got introduced. That allows to enforce search for the terminal
+method although it's not yet reachable.
+
+You can see an example of it's usage in the code above. It needs to specify an error message, that would be reported by
+the compiler if the check fails.
+
+### 5. Detection of misconfiguration of the end check
 In large projects, it may become business critical to avoid missed end methods. But there are situations, that the check
 may get disabled by accidental misconfiguration.
 
