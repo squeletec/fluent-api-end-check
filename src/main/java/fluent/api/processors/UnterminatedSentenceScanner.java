@@ -47,7 +47,6 @@ import java.util.Set;
 
 import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -71,6 +70,9 @@ class UnterminatedSentenceScanner extends TreePathScanner<Void, Tree> {
 	}
 
 	private boolean isStartExpression(Element element, Tree statement) {
+		if(statement.toString().startsWith("super(") || statement.toString().startsWith("this(")) {
+			return false;
+		}
 		Set<String> methods = element.getKind() == CONSTRUCTOR ? getMethods(element.getEnclosingElement().asType()) : getMethods(((ExecutableElement) element).getReturnType());
 		if(!methods.isEmpty() || isAnnotatedStartMethod(element)) {
 			trees.printMessage(ERROR, message(methods), statement, getCurrentPath().getCompilationUnit());
@@ -131,7 +133,14 @@ class UnterminatedSentenceScanner extends TreePathScanner<Void, Tree> {
 
 	private Set<String> getMethods(TypeMirror typeMirror) {
 		Element element = types.asElement(typeMirror);
-		return isNull(element) ? emptySet() : endMethodsCache.computeIfAbsent(element.toString(), elementName -> getMethods(element));
+		if(isNull(element)) {
+			return emptySet();
+		}
+		String elementName = element.toString();
+		if(!endMethodsCache.containsKey(elementName)) {
+			endMethodsCache.put(elementName, getMethods(element));
+		}
+		return endMethodsCache.get(elementName);
 	}
 
 	private String message(Collection<String> m) {

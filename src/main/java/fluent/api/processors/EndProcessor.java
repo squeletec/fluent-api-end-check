@@ -129,6 +129,7 @@ public class EndProcessor extends AbstractProcessor {
 	 * Assertion method to check, that requested EndMethodCheckFile got created.
 	 * @param uniqueFileName Unique file name to be checked, which should have been previously requested to generate
 	 *                       using the annotation EndMethodCheckFile(uniqueFileName)
+	 * @throws IOException in case of any unexpected IO problems while accessing the file (not that it doesn't exist).
 	 */
 	public static void assertThatEndMethodCheckFileExists(String uniqueFileName) throws IOException {
 		Enumeration<URL> resources = ClassLoader.getSystemResources(uniqueFileName);
