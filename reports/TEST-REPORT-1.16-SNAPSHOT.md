@@ -1,6 +1,6 @@
 ## Fluent API sentence end check. 1.16-SNAPSHOT
 #### Test results
-Fri, 1 Feb 2019 08:33:10 +0100
+Fri, 1 Feb 2019 08:40:51 +0100
 
 [EndProcessorTest](../src/test/java/fluent/api/EndProcessorTest.java)
 ##### ![PASSED](icons8-passed-18.png) Compilation should pass when end method not missing _([since 1.0](TEST-REPORT-1.0.md))_
