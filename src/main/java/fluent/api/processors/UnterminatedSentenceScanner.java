@@ -49,6 +49,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
+import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
@@ -73,8 +74,8 @@ class UnterminatedSentenceScanner extends TreePathScanner<Void, Tree> {
 		if(statement.toString().startsWith("super(") || statement.toString().startsWith("this(")) {
 			return false;
 		}
-		Set<String> methods = element.getKind() == CONSTRUCTOR ? getMethods(element.getEnclosingElement().asType()) : getMethods(((ExecutableElement) element).getReturnType());
-		if(!methods.isEmpty() || isAnnotatedStartMethod(element)) {
+		Set<String> methods = getMethods(element.getKind() == CONSTRUCTOR ? element.getEnclosingElement().asType() : element.getKind() == METHOD ? ((ExecutableElement) element).getReturnType() : element.asType());
+		if(!methods.isEmpty() || isAnnotatedStartElement(element)) {
 			trees.printMessage(ERROR, message(methods), statement, getCurrentPath().getCompilationUnit());
 			return true;
 		}
@@ -168,8 +169,8 @@ class UnterminatedSentenceScanner extends TreePathScanner<Void, Tree> {
 		return true;
 	}
 
-	private boolean isAnnotatedStartMethod(Element method) {
-		Start start = method.getAnnotation(Start.class);
+	private boolean isAnnotatedStartElement(Element element) {
+		Start start = element.getAnnotation(Start.class);
 		if(isNull(start)) {
 			return false;
 		}

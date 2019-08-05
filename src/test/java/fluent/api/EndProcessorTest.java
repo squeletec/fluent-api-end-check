@@ -54,6 +54,7 @@ public class EndProcessorTest {
     public static Object[][] sourceFiles() {
         return new Object[][]{
                 {PassWhen, "EndMethodNotMissing", since(1.0)},
+                {PassWhen, "EndMethodNotMissingWithFieldInSentence", since(1.17)},
                 {PassWhen, "ContinueAfterEndMethod", since(1.8)},
                 {PassWhen, "PassThroughEndMethodNotMissing", since(1.1)},
                 {PassWhen, "EndMethodMissingInAssignment", since(1.0)},
@@ -74,6 +75,7 @@ public class EndProcessorTest {
                 {FailWhen, "ImmediateEndMethodMissing", since(1.3)},
                 {FailWhen, "ImmediateEndMethodMissingAfterConstructor", since(1.4)},
                 {FailWhen, "EndMethodMissing", since(1.0)},
+                {FailWhen, "EndMethodMissingWithFieldInSentence", since(1.17)},
                 {FailWhen, "EndMethodMissingInNesting", since(1.1)},
                 {FailWhen, "EndMethodMissingAfterStaticMethod", since(1.12)},
                 {FailWhen, "UnmarkedEndMethod", since(1.1)},

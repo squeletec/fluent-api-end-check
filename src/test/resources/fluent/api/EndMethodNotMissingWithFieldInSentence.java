@@ -1,7 +1,7 @@
 /*
  * BSD 2-Clause License
  *
- * Copyright (c) 2018, Ondrej Fischer
+ * Copyright (c) 2019, Ondrej Fischer
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,74 +29,18 @@
 
 package fluent.api;
 
-/**
- * Dsl interface allowing chaining of method add(), but with required terminal method end().
- */
-public class Dsl {
+import fluent.api.Dsl;
 
-    /**
-     * Field use in DSL chain.
-     */
-    public final Dsl field = this;
+public class EndMethodNotMissingWithFieldInSentence {
 
-    /**
-     * Method allowing chaining.
-     *
-     * @return The DSL to continue chaining.
-     */
-    public Dsl add() {
-        return this;
-    }
+	private final Dsl field;
 
-    /**
-     * Terminal method, that needs to be invoked at the end of the chain.
-     */
-    @End
-    public void end() {
+	public EndMethodNotMissingWithFieldInSentence(Dsl field) {
+		this.field = field;
+	}
 
-    }
-
-    /**
-     * Another terminal method, that needs to be invoked at the end of the chain.
-     */
-    @End
-    public Dsl cancel() {
-        return this;
-    }
-
-    public Nested nested() {
-        return null;
-    }
-
-    public void wrongEnd() {
-
-    }
-
-    public NestedAllowingEnd nestedAllowingEnd() {
-        return null;
-    }
-
-    @End
-    public Result result() {
-        return null;
-    }
-
-    public static void accept(Dsl dsl) {
-
-    }
-
-    @Start("Missing parameters.")
-    public static Parameter1 call() {
-        return null;
-    }
-
-    interface Parameter1 {
-        Parameter2 parameter1(int value);
-    }
-
-    interface Parameter2 {
-        @End
-        void parameter2(String value);
-    }
+	public void method(Dsl dsl) {
+		this.field.end();
+	}
 
 }
