@@ -328,6 +328,13 @@ Such test will fail if
 
 ## Release notes
 
+#### Version 1.18 (August 5th 2019)
+- `@End` method check is not silently disabled any more in case of it's implementation problems. It fails the compilation
+  providing more details and instructions for reporting a bug instead, forcing the client to disable the check
+  explicitly.
+
+[Test evidence for 1.18](reports/TEST-REPORT-1.18.md)
+
 #### Version 1.17 (August 5th 2019)
 - Fixed [#13: Check fails if expression contains field selector](https://github.com/c0stra/fluent-api-end-check/issues/13)
 
