@@ -39,12 +39,15 @@ import fluent.api.IgnoreMissingEndMethod;
 import javax.lang.model.element.Element;
 import javax.lang.model.util.Types;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import static com.sun.source.tree.LambdaExpressionTree.BodyKind.EXPRESSION;
 import static com.sun.source.tree.Tree.Kind.ASSIGNMENT;
 import static com.sun.source.util.TaskEvent.Kind.ANALYZE;
 import static java.util.Objects.nonNull;
 import static javax.lang.model.element.Modifier.STATIC;
-import static javax.tools.Diagnostic.Kind.WARNING;
+import static javax.tools.Diagnostic.Kind.ERROR;
 
 /**
  * Compiler plugin scanning the source code for expression, which are supposed to be terminated by special terminal
@@ -72,7 +75,9 @@ class DslScanner extends TreePathScanner<Void, Void> implements TaskListener {
 		if(taskEvent.getKind() == ANALYZE) try {
 			scan(taskEvent.getCompilationUnit(), null);
 		} catch (RuntimeException runtimeException) {
-			trees.printMessage(WARNING, "Unable to finish @End method check: " + runtimeException, taskEvent.getCompilationUnit(), taskEvent.getCompilationUnit());
+			StringWriter writer = new StringWriter();
+			runtimeException.printStackTrace(new PrintWriter(writer));
+			trees.printMessage(ERROR, "Unable to finish @End method check: " + writer, taskEvent.getCompilationUnit(), taskEvent.getCompilationUnit());
 		}
 	}
 
