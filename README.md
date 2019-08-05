@@ -328,6 +328,16 @@ Such test will fail if
 
 ## Release notes
 
+#### Version 1.17 (August 5th 2019)
+- Fixed [#13: Check fails if expression contains field selector](https://github.com/c0stra/fluent-api-end-check/issues/13)
+
+[Test evidence for 1.17](reports/TEST-REPORT-1.17.md)
+
+#### Version 1.16 (February 1st 2019)
+- Fixed infinite loop in analysis causing the check to hang compilation.
+
+[Test evidence for 1.16](reports/TEST-REPORT-1.16.md)
+
 #### Version 1.15 (December 11th 2018)
 - Introduced `@Start` annotation used to mark beginning of a fluent sentence, that needs to finish with
   `@End` for use cases, where the sentence may be composed by chaining of different interfaces, some of them not containing the ending method.
