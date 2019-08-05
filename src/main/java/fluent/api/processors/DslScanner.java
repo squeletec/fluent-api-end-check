@@ -77,7 +77,7 @@ class DslScanner extends TreePathScanner<Void, Void> implements TaskListener {
 		} catch (RuntimeException runtimeException) {
 			StringWriter writer = new StringWriter();
 			runtimeException.printStackTrace(new PrintWriter(writer));
-			trees.printMessage(ERROR, "Unable to finish @End method check: " + writer, taskEvent.getCompilationUnit(), taskEvent.getCompilationUnit());
+			trees.printMessage(ERROR, "@End method check failed. Please raise report at: https://github.com/c0stra/fluent-api-end-check/issues with following details: " + writer, taskEvent.getCompilationUnit(), taskEvent.getCompilationUnit());
 		}
 	}
 
