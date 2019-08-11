@@ -30,10 +30,7 @@
 package fluent.api.processors;
 
 import com.sun.source.tree.*;
-import com.sun.source.util.TaskEvent;
-import com.sun.source.util.TaskListener;
-import com.sun.source.util.TreePathScanner;
-import com.sun.source.util.Trees;
+import com.sun.source.util.*;
 import fluent.api.IgnoreMissingEndMethod;
 
 import javax.lang.model.element.Element;
@@ -89,7 +86,7 @@ class DslScanner extends TreePathScanner<Void, Void> implements TaskListener {
 
 	private void visitExpression(Tree tree, Tree statement) {
 		if(tree.getKind() != ASSIGNMENT) {
-			unterminatedSentenceScanner.scan(getCurrentPath(), statement);
+			unterminatedSentenceScanner.scan(new TreePath(getCurrentPath(), tree), statement);
 		}
 	}
 

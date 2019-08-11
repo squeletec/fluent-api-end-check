@@ -114,6 +114,11 @@ class UnterminatedSentenceScanner extends TreePathScanner<Void, Tree> {
 	}
 
 	@Override
+	public Void visitNewClass(NewClassTree tree, Tree statement) {
+		return endOrStartFound(tree, statement) ? null : tree.getIdentifier().accept(this, statement);
+	}
+
+	@Override
 	public Void visitMemberSelect(MemberSelectTree tree, Tree statement) {
 		return isStartExpression(element(tree), statement) ? null : visitExpression(tree.getExpression(), statement);
 	}
