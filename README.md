@@ -328,6 +328,11 @@ Such test will fail if
 
 ## Release notes
 
+#### Version 1.19 (August 11th 2019)
+- Fixed [#14: Check fails on lambda with BLOCK body](https://github.com/c0stra/fluent-api-end-check/issues/14)
+
+[Test evidence for 1.19](reports/TEST-REPORT-1.19.md)
+
 #### Version 1.18 (August 5th 2019)
 - `@End` method check is not silently disabled any more in case of it's implementation problems. It fails the compilation
   providing more details and instructions for reporting a bug instead, forcing the client to disable the check
