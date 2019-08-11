@@ -47,6 +47,13 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <scope>system</scope>
+            <systemPath>${java.home}/../lib/tools.jar</systemPath>
+            <version>${java.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
@@ -154,21 +161,6 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>javac8</id>
-            <activation>
-                <property><name>java.version</name><value>1.8</value></property>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.sun</groupId>
-                    <artifactId>tools</artifactId>
-                    <scope>system</scope>
-                    <systemPath>${java.home}/../lib/tools.jar</systemPath>
-                    <version>${java.version}</version>
-                </dependency>
-            </dependencies>
-        </profile>
         <profile>
             <id>testEvidence</id>
             <activation><activeByDefault>true</activeByDefault></activation>
