@@ -30,165 +30,147 @@
 package fluent.api.processors;
 
 import com.sun.source.tree.*;
-import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
-import fluent.api.End;
-import fluent.api.Start;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
-import static java.util.Collections.emptySet;
-import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.toSet;
+import static java.lang.Boolean.TRUE;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
-import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.STATIC;
-import static javax.tools.Diagnostic.Kind.ERROR;
 
 /**
  * Compiler plugin scanning the source code for expression, which are supposed to be terminated by special terminal
  * methods (annotated with @End annotation), but were not.
  */
-class UnterminatedSentenceScanner extends TreePathScanner<Void, Tree> {
+class UnterminatedSentenceScanner extends TreePathScanner<Boolean, String[]> {
 
-	private final Map<String, Set<String>> endMethodsCache;
+	private final AnnotationUtils utils;
 	private final Trees trees;
-	private final Types types;
-	private String lastError = "";
 
-	UnterminatedSentenceScanner(Map<String, Set<String>> endMethodsCache, Trees trees, Types types) {
-		this.endMethodsCache = endMethodsCache;
+	UnterminatedSentenceScanner(AnnotationUtils utils, Trees trees) {
+		this.utils = utils;
 		this.trees = trees;
-		this.types = types;
 	}
 
-	private boolean isStartExpression(Element element, Tree statement) {
-		if(statement.toString().startsWith("super(") || statement.toString().startsWith("this(")) {
+	/*
+	 * Top level scanning entry points.
+	 *
+	 * At the top level, knowing, that expression ends, the fact, that last invoked method is @End method has higher
+	 * priority over the fact, that it may be starting new chain requiring end method.
+	 */
+
+	private Boolean visitExpression(Tree tree, String[] errorMessage) {
+		Element element = element(tree);
+		if(utils.isEnd(element, errorMessage)) {
 			return false;
 		}
-		Set<String> methods = getMethods(element.getKind() == CONSTRUCTOR ? element.getEnclosingElement().asType() : element.getKind() == METHOD ? ((ExecutableElement) element).getReturnType() : element.asType());
-		if(!methods.isEmpty() || isAnnotatedStartElement(element)) {
-			trees.printMessage(ERROR, message(methods), statement, getCurrentPath().getCompilationUnit());
+		if(utils.requiresEnd(type(tree), errorMessage)) {
 			return true;
 		}
-		return false;
+		return tree.accept(this, errorMessage);
 	}
 
-	private boolean endOrStartFound(ExpressionTree tree, Tree statement) {
-		Element element = element(tree);
-		return isEndMethod(element) || isStartExpression(element, statement) || isConstructorOrStaticMethod(element);
+	@Override
+	public Boolean visitExpressionStatement(ExpressionStatementTree tree, String[] errorMessage) {
+		return visitExpression(tree.getExpression(), errorMessage);
 	}
 
-	private Void visitExpression(ExpressionTree tree, Tree statement) {
-		if(tree.accept(new SimpleTreeVisitor<Boolean, Void>(false) {
-			@Override public Boolean visitMethodInvocation(MethodInvocationTree methodInvocationTree, Void aVoid) {
-				return isEndMethod(element(tree));
-			}
-		}, null)) {
-			return null;
+	@Override
+	public Boolean visitLambdaExpression(LambdaExpressionTree tree, String[] errorMessage) {
+		return visitExpression(tree.getBody(), errorMessage);
+	}
+
+	@Override
+	public Boolean visitMemberReference(MemberReferenceTree tree, String[] errorMessage) {
+		Element member = element(tree);
+		if(utils.isEnd(member, errorMessage)) {
+			return false;
 		}
-		Set<String> endMethods = new HashSet<>(getMethods(tree));
-		tree.accept(this, statement);
-		if (!endMethods.isEmpty()) {
-			trees.printMessage(ERROR, message(endMethods), statement, getCurrentPath().getCompilationUnit());
+		if(utils.isStart(member, errorMessage) || utils.requiresEnd(typeOf(member), errorMessage)) {
+			return true;
 		}
+		return super.visitMemberReference(tree, errorMessage);
+	}
+
+
+	/*
+		Drill down of statement portions to identify unclosed opening of fluent sentence.
+	 */
+
+	@Override
+	public Boolean visitMethodInvocation(MethodInvocationTree tree, String[] errorMessage) {
+		return tree.getMethodSelect().accept(this, errorMessage);
+	}
+
+	@Override
+	public Boolean visitNewClass(NewClassTree tree, String[] errorMessage) {
+		return utils.requiresEnd(type(tree), errorMessage);
+	}
+
+	@Override
+	public Boolean visitArrayAccess(ArrayAccessTree tree, String[] strings) {
+		return tree.getExpression().accept(this, strings);
+	}
+
+	@Override
+	public Boolean visitIdentifier(IdentifierTree identifierTree, String[] errorMessage) {
+		return utils.isStart(element(identifierTree), errorMessage);
+	}
+
+	@Override
+	public Boolean visitMemberSelect(MemberSelectTree tree, String[] errorMessage) {
+		Element member = element(tree);
+		if(utils.isStart(member, errorMessage)) {
+			return true;
+		}
+		if(utils.isEnd(member, errorMessage)) {
+			return false;
+		}
+		if(member.getModifiers().contains(STATIC)) {
+			return false;
+		}
+		if(!"this".equals(tree.getExpression().toString()) && utils.requiresEnd(type(tree.getExpression()), errorMessage)) {
+			return true;
+		}
+		return tree.getExpression().accept(this, errorMessage);
+	}
+
+	@Override
+	public Boolean visitConditionalExpression(ConditionalExpressionTree tree, String[] strings) {
+		return TRUE.equals(tree.getTrueExpression().accept(this, strings)) || TRUE.equals(tree.getFalseExpression().accept(this, strings));
+	}
+
+	@Override
+	public Boolean visitAssignment(AssignmentTree assignmentTree, String[] strings) {
 		return null;
 	}
 
 	@Override
-	public Void visitExpressionStatement(ExpressionStatementTree expressionStatementTree, Tree tree) {
-		return visitExpression(expressionStatementTree.getExpression(), tree);
-	}
-
-	@Override
-	public Void visitMethodInvocation(MethodInvocationTree tree, Tree statement) {
-		return endOrStartFound(tree, statement) ? null : tree.getMethodSelect().accept(this, statement);
-	}
-
-	@Override
-	public Void visitNewClass(NewClassTree tree, Tree statement) {
-		return endOrStartFound(tree, statement) ? null : tree.getIdentifier().accept(this, statement);
-	}
-
-	@Override
-	public Void visitMemberSelect(MemberSelectTree tree, Tree statement) {
-		return isStartExpression(element(tree), statement) ? null : visitExpression(tree.getExpression(), statement);
-	}
-
-	@Override
-	public Void visitMemberReference(MemberReferenceTree tree, Tree statement) {
-		return endOrStartFound(tree, statement) ? null : super.visitMemberReference(tree, statement);
-	}
-
-	@Override
-	public Void visitLambdaExpression(LambdaExpressionTree lambdaExpressionTree, Tree tree) {
-		return visitExpression((ExpressionTree) lambdaExpressionTree.getBody(), tree);
-	}
-
-	private Set<String> getMethods(Tree tree) {
-		return "this".equals(tree.toString()) ? emptySet() : getMethods(trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree)));
-	}
-
-	private Set<String> getMethods(TypeMirror typeMirror) {
-		Element element = types.asElement(typeMirror);
-		if(isNull(element)) {
-			return emptySet();
-		}
-		String elementName = element.toString();
-		if(!endMethodsCache.containsKey(elementName)) {
-			endMethodsCache.put(elementName, getMethods(element));
-		}
-		return endMethodsCache.get(elementName);
-	}
-
-	private String message(Collection<String> m) {
-		return lastError.isEmpty() ? "Method chain must end with " + (m.size() > 1 ? "one of the following methods: " : "method: ") + m : lastError;
+	public Boolean visitNewArray(NewArrayTree tree, String[] strings) {
+		return null;
 	}
 
 	private Element element(Tree tree) {
 		return trees.getElement(trees.getPath(getCurrentPath().getCompilationUnit(), tree));
 	}
 
-	private Set<String> getMethods(Element element) {
-		Set<String> methods = element.getEnclosedElements().stream().filter(this::isAnnotatedEndMethod).map(Object::toString).collect(toSet());
-		types.directSupertypes(element.asType()).forEach(type -> methods.addAll(getMethods(type)));
-		return methods.isEmpty() ? emptySet() : methods;
+	private TypeMirror type(Tree tree) {
+		return trees.getTypeMirror(trees.getPath(getCurrentPath().getCompilationUnit(), tree));
 	}
 
-	private boolean isAnnotatedEndMethod(Element method) {
-		End end = method.getAnnotation(End.class);
-		if(isNull(end)) {
-			return false;
-		}
-		if(!end.message().isEmpty()) {
-			lastError = end.message();
-		}
-		return true;
-	}
-
-	private boolean isAnnotatedStartElement(Element element) {
-		Start start = element.getAnnotation(Start.class);
-		if(isNull(start)) {
-			return false;
-		}
-		lastError = start.value();
-		return true;
-	}
-
-	private static boolean isConstructorOrStaticMethod(Element method) {
-		return method.getKind() == CONSTRUCTOR || method.getModifiers().contains(STATIC);
-	}
-
-	private boolean isEndMethod(Element method) {
-		return isAnnotatedEndMethod(method) || endMethodsCache.getOrDefault(method.getEnclosingElement().toString(), emptySet()).contains(method.toString());
+	private TypeMirror typeOf(Element element) {
+		return element.accept(new ElementVisitor<TypeMirror, Void>() {
+			@Override public TypeMirror visit(Element e, Void aVoid) { return e.accept(this, aVoid); }
+			@Override public TypeMirror visit(Element e) { return e.accept(this, null); }
+			@Override public TypeMirror visitPackage(PackageElement e, Void aVoid) { return e.asType(); }
+			@Override public TypeMirror visitType(TypeElement e, Void aVoid) { return e.asType(); }
+			@Override public TypeMirror visitVariable(VariableElement e, Void aVoid) { return e.asType(); }
+			@Override public TypeMirror visitExecutable(ExecutableElement e, Void aVoid) { return e.getKind() == CONSTRUCTOR ? visit(e.getEnclosingElement()) : e.getReturnType(); }
+			@Override public TypeMirror visitTypeParameter(TypeParameterElement e, Void aVoid) { return e.asType(); }
+			@Override public TypeMirror visitUnknown(Element e, Void aVoid) { return e.asType(); }
+		}, null);
 	}
 
 }

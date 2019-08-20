@@ -1,7 +1,7 @@
 /*
  * BSD 2-Clause License
  *
- * Copyright (c) 2018, Ondrej Fischer
+ * Copyright (c) 2019, Ondrej Fischer
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,14 +29,21 @@
 
 package fluent.api;
 
-import java.lang.annotation.*;
+import java.util.function.Consumer;
 
-/**
- * Annotation is marking start of fluent API sentence, which needs to terminate with proper terminal methods.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
-@Documented
-public @interface Start {
-    String value();
+public class EndMethodMissingInLambdaInAssignment {
+
+	public void test() {
+		Consumer<Dsl> consumer;
+		(true ? consumer = dsl -> {
+			System.out.println();
+			System.out.println();
+			dsl.add();
+		} : null).accept(null);
+	}
+
+	public Consumer<Dsl> a(Consumer<Dsl> c) {
+		return c;
+	}
+
 }

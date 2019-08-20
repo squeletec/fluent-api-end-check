@@ -42,6 +42,7 @@ import java.io.StringWriter;
 import static com.sun.source.tree.LambdaExpressionTree.BodyKind.EXPRESSION;
 import static com.sun.source.tree.Tree.Kind.ASSIGNMENT;
 import static com.sun.source.util.TaskEvent.Kind.ANALYZE;
+import static java.lang.Boolean.TRUE;
 import static java.util.Objects.nonNull;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.tools.Diagnostic.Kind.ERROR;
@@ -84,33 +85,35 @@ class DslScanner extends TreePathScanner<Void, Void> implements TaskListener {
 		return nonNull(element.getAnnotation(IgnoreMissingEndMethod.class)) ? null : super.visitMethod(methodTree, aVoid);
 	}
 
-	private void visitExpression(Tree tree, Tree statement) {
-		if(tree.getKind() != ASSIGNMENT) {
-			unterminatedSentenceScanner.scan(new TreePath(getCurrentPath(), tree), statement);
-		}
-	}
-
 	@Override
 	public Void visitExpressionStatement(ExpressionStatementTree statement, Void aVoid) {
-		visitExpression(statement.getExpression(), statement);
+		if(statement.getExpression().getKind() != ASSIGNMENT) {
+			scan(statement.getExpression());
+		}
 		return super.visitExpressionStatement(statement, aVoid);
 	}
 
 	@Override
 	public Void visitLambdaExpression(LambdaExpressionTree tree, Void aVoid) {
-		if(tree.getBodyKind() == EXPRESSION && isVoidLambda(tree)) {
-			visitExpression(tree.getBody(), tree);
+		if(tree.getBodyKind() == EXPRESSION && isVoidLambda(tree) && tree.getBody().getKind() != ASSIGNMENT) {
+			scan(tree.getBody());
 		}
 		return super.visitLambdaExpression(tree, null);
 	}
 
 	@Override
 	public Void visitMemberReference(MemberReferenceTree tree, Void aVoid) {
-		ExpressionTree expression = tree.getQualifierExpression();
 		if(isVoidLambda(tree)) {
-			unterminatedSentenceScanner.scan(getCurrentPath(), tree);
+			scan(tree);
 		}
-		return expression.accept(this, null);
+		return tree.getQualifierExpression().accept(this, null);
+	}
+
+	private void scan(Tree tree) {
+		String[] errorMessage = new String[1];
+		if(TRUE.equals(unterminatedSentenceScanner.scan(getCurrentPath(), errorMessage))) {
+			trees.printMessage(ERROR, errorMessage[0], tree, getCurrentPath().getCompilationUnit());
+		}
 	}
 
 	private boolean isVoidLambda(Tree tree) {

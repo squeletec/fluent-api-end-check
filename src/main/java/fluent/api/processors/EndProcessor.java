@@ -72,7 +72,7 @@ public class EndProcessor extends AbstractProcessor {
 		super.init(env);
 		Trees trees = Trees.instance(env);
 		Types types = env.getTypeUtils();
-		DslScanner endScanner = new DslScanner(new UnterminatedSentenceScanner(loadEndMethodsFromFiles(), trees, types), trees, types);
+		DslScanner endScanner = new DslScanner(new UnterminatedSentenceScanner(new AnnotationUtils(loadEndMethodsFromFiles(), types), trees), trees, types);
 		JavacTask.instance(env).addTaskListener(endScanner);
 	}
 
