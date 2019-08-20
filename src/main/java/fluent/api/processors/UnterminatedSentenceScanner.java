@@ -62,8 +62,7 @@ class UnterminatedSentenceScanner extends TreePathScanner<Boolean, String[]> {
 	 */
 
 	private Boolean visitExpression(Tree tree, String[] errorMessage) {
-		Element element = element(tree);
-		if(utils.isEnd(element, errorMessage)) {
+		if(tree.getKind() == Tree.Kind.METHOD_INVOCATION && utils.isEnd(element(tree), errorMessage)) {
 			return false;
 		}
 		if(utils.requiresEnd(type(tree), errorMessage)) {
@@ -91,7 +90,7 @@ class UnterminatedSentenceScanner extends TreePathScanner<Boolean, String[]> {
 		if(utils.isStart(member, errorMessage) || utils.requiresEnd(typeOf(member), errorMessage)) {
 			return true;
 		}
-		return super.visitMemberReference(tree, errorMessage);
+		return tree.getQualifierExpression().accept(this, errorMessage);
 	}
 
 

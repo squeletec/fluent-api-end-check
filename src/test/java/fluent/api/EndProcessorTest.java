@@ -72,6 +72,7 @@ public class EndProcessorTest {
                 {PassWhen, "EndMethodMissingInFunctionExpression", since(1.8)},
                 {PassWhen, "IgnoreEndMethodOnThis", since(1.9)},
                 {PassWhen, "EndMethodNotMissingInSequenceChain", since(1.15)},
+                {PassWhen, "NonDslStatement", since(2.21)},
 
                 {FailWhen, "ImmediateEndMethodMissing", since(1.3)},
                 {FailWhen, "ImmediateEndMethodMissingAfterConstructor", since(1.4)},

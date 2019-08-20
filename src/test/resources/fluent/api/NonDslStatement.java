@@ -29,32 +29,11 @@
 
 package fluent.api;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
+public class NonDslStatement {
 
-import javax.tools.*;
-import java.io.File;
-import java.io.StringWriter;
-import java.net.URISyntaxException;
-import java.util.List;
-
-import static java.util.Collections.emptyList;
-
-public class BugFinderTest {
-
-    @Test(enabled = false)
-    public void findBug() throws URISyntaxException {
-        DiagnosticCollector<JavaFileObject> listener = new DiagnosticCollector<>();
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-        Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjects(new File(getClass().getResource("BugFinder.java").toURI()));
-        JavaCompiler.CompilationTask task = compiler.getTask(new StringWriter(), fileManager, listener, emptyList(), null, fileObjects);
-        boolean result = task.call();
-        List<Diagnostic<? extends JavaFileObject>> diagnostics = listener.getDiagnostics();
-        if (!diagnostics.isEmpty()) {
-            System.out.println(diagnostics);
-        }
-        Assert.assertTrue(result, diagnostics.toString());
-    }
+	public void method(Dsl dsl) {
+		int i = 0;
+		i++;
+	}
 
 }

@@ -1,7 +1,7 @@
 /*
  * BSD 2-Clause License
  *
- * Copyright (c) 2018, Ondrej Fischer
+ * Copyright (c) 2019, Ondrej Fischer
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,17 +29,12 @@
 
 package fluent.api;
 
-public class ChainStartsWithThis {
+public class BugFinder {
 
-	private Dsl dslMethod() {
-		return null;
+	public void method(Dsl dsl) {
+		dsl.end();
+		int i = 0;
+		i++;
 	}
-
-	public void method() {
-		this.dslMethod();
-	}
-
-	@End
-	public void endMethod() {}
 
 }
