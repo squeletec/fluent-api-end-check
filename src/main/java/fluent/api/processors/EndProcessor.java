@@ -38,10 +38,14 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.util.Set;
 import java.util.Map;
@@ -67,9 +71,41 @@ public class EndProcessor extends AbstractProcessor {
 
 	private static final String EXTERNAL_END_METHOD_FILE = "fluent-api-check-methods.txt";
 
+	/**
+	 *  With the introduction of IntelliJ Idea 2020.3 release the ProcessingEnvironment
+	 *  is not of type com.sun.tools.javac.processing.JavacProcessingEnvironment
+	 *  but java.lang.reflect.Proxy.
+	 *  The com.sun.source.util.Trees.instance() throws an IllegalArgumentException when the proxied processingEnv is passed.
+	 *
+	 * @param processingEnv possible proxied
+	 * @return ProcessingEnvironment unwrapped from the proxy if proxied or the original processingEnv
+	 */
+	private static ProcessingEnvironment unwrap(ProcessingEnvironment processingEnv) {
+		if (Proxy.isProxyClass(processingEnv.getClass())) {
+			InvocationHandler invocationHandler = Proxy.getInvocationHandler(processingEnv);
+			try {
+				Field field = invocationHandler.getClass().getDeclaredField("val$delegateTo");
+				field.setAccessible(true);
+				Object o = field.get(invocationHandler);
+				if (o instanceof ProcessingEnvironment) {
+					return (ProcessingEnvironment) o;
+				} else {
+					processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "got "+o.getClass()+ " expected instanceof com.sun.tools.javac.processing.JavacProcessingEnvironment");
+					return null;
+				}
+			} catch (NoSuchFieldException | IllegalAccessException e) {
+				processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e.getMessage());
+				return null;
+			}
+		} else {
+			return processingEnv;
+		}
+	}
+
 	@Override
-	public synchronized void init(ProcessingEnvironment env) {
-		super.init(env);
+	public synchronized void init(ProcessingEnvironment processingEnv) {
+		super.init(processingEnv);
+		ProcessingEnvironment env = unwrap(processingEnv);
 		Trees trees = Trees.instance(env);
 		Types types = env.getTypeUtils();
 		DslScanner endScanner = new DslScanner(new UnterminatedSentenceScanner(new AnnotationUtils(loadEndMethodsFromFiles(), types), trees), trees, types);
