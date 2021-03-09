@@ -92,7 +92,7 @@ public class EndProcessor extends AbstractProcessor {
 				if (o instanceof ProcessingEnvironment) {
 					return (ProcessingEnvironment) o;
 				} else {
-					env.getMessager().printMessage(ERROR, "got " + o.getClass() + " expected instanceof " + JavacProcessingEnvironment.class);
+					env.getMessager().printMessage(ERROR, "got " + o.getClass() + " expected instanceof import com.sun.tools.javac.processing.JavacProcessingEnvironment");
 				}
 			} catch (NoSuchFieldException | IllegalAccessException e) {
 				env.getMessager().printMessage(ERROR, e.getMessage());
