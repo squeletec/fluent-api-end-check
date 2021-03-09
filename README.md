@@ -68,11 +68,28 @@ In order to be able to mark ending method using `@End` annotation, following dep
 <dependency>
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-api-end-check</artifactId>
-    <version>1.9</version>
+    <version>1.22</version>
 </dependency>
 ```
 To figure out, what's the latest available version, use following search link in maven central:
 https://search.maven.org/#search%7Cga%7C1%7Cfluent-api-end-check
+
+**For JAVA 8 and `fluent-api-end-check` version >= 1.23**
+Starting in version 1.23 the project was updated to use Java 9+ as default supported version. Therefore, the legacy
+dependency on separate java tools was removed from project's dependencies.
+If you want to use the check with java 8, then add the dependency in your project:
+
+```xml
+<dependency>
+    <groupId>com.sun</groupId>
+    <artifactId>tools</artifactId>
+    <scope>system</scope>
+    <systemPath>${java.home}/../lib/tools.jar</systemPath>
+    <version>${java.version}</version>
+</dependency>
+```
+
+For older version of `fluent-api-end-check` (<= 1.22) use opposite approach. For use with java 9+ exclude this dependency.
 
 The annotation can then be used to mark the ending method:
 ```java
@@ -187,7 +204,7 @@ It can be done e.g. using maven compiler plugin:
                     <annotationProcessorPath>
                         <groupId>foundation.fluent.api</groupId>
                         <artifactId>fluent-api-end-check</artifactId>
-                        <version>1.9</version>
+                        <version>1.22</version>
                     </annotationProcessorPath>
                 </annotationProcessorPaths>
             </configuration>
@@ -327,6 +344,16 @@ Such test will fail if
 * or if more than one file was found on class-path, so the filename is not unique.
 
 ## Release notes
+
+#### Version 1.23 (March 10th 2021)
+- Switched by default to JAVA 9 approach (use bundled tools with Javac tree API instead of using system dependency)
+
+[Test evidence for 1.23](reports/TEST-REPORT-1.23.md)
+
+#### Version 1.22 (March 9th 2021)
+- Adopted to IntelliJ IDEA proxy of javac ProcessingEnvironment (thanks to @ava1ar)
+
+[Test evidence for 1.22](reports/TEST-REPORT-1.22.md)
 
 #### Version 1.19 (August 11th 2019)
 - Fixed [#14: Check fails on lambda with BLOCK body](https://github.com/c0stra/fluent-api-end-check/issues/14)

@@ -31,6 +31,7 @@ package fluent.api.processors;
 
 
 import com.sun.source.util.*;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import fluent.api.EndMethodCheckFile;
 
 import javax.annotation.processing.*;
@@ -38,7 +39,6 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -58,6 +58,7 @@ import static java.lang.ClassLoader.getSystemResources;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.joining;
 import static javax.lang.model.element.ElementKind.METHOD;
+import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static javax.tools.StandardLocation.SOURCE_OUTPUT;
 
@@ -77,29 +78,27 @@ public class EndProcessor extends AbstractProcessor {
 	 *  but java.lang.reflect.Proxy.
 	 *  The com.sun.source.util.Trees.instance() throws an IllegalArgumentException when the proxied processingEnv is passed.
 	 *
-	 * @param processingEnv possible proxied
+	 * @param env possible proxied
 	 * @return ProcessingEnvironment unwrapped from the proxy if proxied or the original processingEnv
 	 */
-	private static ProcessingEnvironment unwrap(ProcessingEnvironment processingEnv) {
-		if (Proxy.isProxyClass(processingEnv.getClass())) {
-			InvocationHandler invocationHandler = Proxy.getInvocationHandler(processingEnv);
+	private static ProcessingEnvironment unwrap(ProcessingEnvironment env) {
+		if (Proxy.isProxyClass(env.getClass())) {
+			InvocationHandler invocationHandler = Proxy.getInvocationHandler(env);
 			try {
 				Field field = invocationHandler.getClass().getDeclaredField("val$delegateTo");
 				field.setAccessible(true);
 				Object o = field.get(invocationHandler);
+				field.setAccessible(false);
 				if (o instanceof ProcessingEnvironment) {
 					return (ProcessingEnvironment) o;
 				} else {
-					processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "got "+o.getClass()+ " expected instanceof com.sun.tools.javac.processing.JavacProcessingEnvironment");
-					return null;
+					env.getMessager().printMessage(ERROR, "got " + o.getClass() + " expected instanceof " + JavacProcessingEnvironment.class);
 				}
 			} catch (NoSuchFieldException | IllegalAccessException e) {
-				processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e.getMessage());
-				return null;
+				env.getMessager().printMessage(ERROR, e.getMessage());
 			}
-		} else {
-			return processingEnv;
 		}
+		return env;
 	}
 
 	@Override
