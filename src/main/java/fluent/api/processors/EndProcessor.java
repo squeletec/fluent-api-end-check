@@ -31,7 +31,6 @@ package fluent.api.processors;
 
 
 import com.sun.source.util.*;
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import fluent.api.EndMethodCheckFile;
 
 import javax.annotation.processing.*;
